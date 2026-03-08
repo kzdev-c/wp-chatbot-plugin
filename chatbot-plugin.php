@@ -9,6 +9,7 @@ Icon: icon.png
 
 define('CHATBOT_API_BASE_URL', 'https://web-chatbots.codenesslab.com');
 define('CHATBOT_TTS_BASE_URL', 'https://tts.codenesslab.com');
+define('CHATBOT_TTS_BEARER_TOKEN', 'HJrI7hRH8H2lfzdqs8ZLdZlp2UzHAz3yqDFyyB7rcxz4gygbA4tOLfmAkmzLzZo4');
 
 function chatbot_html()
 {
@@ -73,6 +74,11 @@ function chatbot_save_settings()
     include plugin_dir_path(__FILE__) . '/functions/chatbot-save-settings.php';
 }
 
+function chatbot_tts_proxy()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-tts-proxy.php';
+}
+
 function chatbot_default_settings()
 {
     if (get_option('chatbot_name') === false) {
@@ -96,5 +102,8 @@ add_action('wp_ajax_ask_question', 'chatbot_handle_question');
 add_action('wp_ajax_nopriv_ask_question', 'chatbot_handle_question');
 
 add_action('wp_ajax_chatbot_save_settings', 'chatbot_save_settings');
+
+add_action('wp_ajax_chatbot_tts', 'chatbot_tts_proxy');
+add_action('wp_ajax_nopriv_chatbot_tts', 'chatbot_tts_proxy');
 
 add_action('admin_init', 'chatbot_default_settings');

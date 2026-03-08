@@ -78,42 +78,78 @@ jQuery(document).ready(function ($) {
         $btn.find('i').removeClass('fa-volume-up fa-pause').addClass('fa-spinner fa-spin');
         currentSpeakerBtn = $btn;
 
-        fetch(chatbotAjax.ttsUrl, {
+        // Call TTS through WordPress AJAX proxy (avoids CORS)
+        var formData = new FormData();
+        formData.append('action', 'chatbot_tts');
+        formData.append('text', text);
+        formData.append('voice', 'en-US-JennyNeural');
+
+        fetch(chatbotAjax.ajaxurl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: text, voice: 'en-US-JennyNeural' })
+            body: formData
         })
         .then(function (response) {
-            if (!response.ok) throw new Error('TTS request failed');
-            return response.blob();
+            var contentType = response.headers.get('content-type') || '';
+
+            // If the response is JSON, it's an error from our proxy
+            if (contentType.indexOf('application/json') !== -1) {
+                return response.json().then(function (json) {
+                    console.error('TTS proxy error:', json);
+                    throw new Error(json.data || 'TTS proxy error');
+                });
+            }
+
+            // If not audio, something went wrong
+            if (contentType.indexOf('audio') === -1) {
+                return response.text().then(function (text) {
+                    console.error('TTS unexpected response:', text.substring(0, 300));
+                    throw new Error('TTS returned non-audio response');
+                });
+            }
+
+            // Get as arrayBuffer so we can create blob with explicit MIME type
+            return response.arrayBuffer();
         })
-        .then(function (blob) {
+        .then(function (buffer) {
+            if (!buffer) return; // error was thrown above
+
+            var blob = new Blob([buffer], { type: 'audio/mpeg' });
             var audioUrl = URL.createObjectURL(blob);
-            var audio = new Audio(audioUrl);
+            var audio = new Audio();
 
             // Store audio reference on the button
             $btn.data('audio', audio);
             currentAudio = audio;
             currentSpeakerBtn = $btn;
 
-            // Switch to pause icon
-            $btn.find('i').removeClass('fa-spinner fa-spin fa-volume-up').addClass('fa-pause');
+            audio.oncanplaythrough = function () {
+                // Switch to pause icon once audio is ready
+                $btn.find('i').removeClass('fa-spinner fa-spin fa-volume-up').addClass('fa-pause');
+            };
 
             audio.onended = function () {
                 $btn.find('i').removeClass('fa-pause').addClass('fa-volume-up');
                 currentAudio = null;
                 currentSpeakerBtn = null;
+                URL.revokeObjectURL(audioUrl);
             };
 
             audio.onerror = function () {
+                console.error('Audio playback error');
                 $btn.find('i').removeClass('fa-pause fa-spinner fa-spin').addClass('fa-volume-up');
                 currentAudio = null;
                 currentSpeakerBtn = null;
+                URL.revokeObjectURL(audioUrl);
             };
 
-            audio.play();
+            audio.src = audioUrl;
+            audio.play().catch(function (err) {
+                console.error('Audio play() failed:', err);
+                $btn.find('i').removeClass('fa-spinner fa-spin').addClass('fa-volume-up');
+            });
         })
         .catch(function (error) {
+            console.error('TTS fetch error:', error);
             $btn.find('i').removeClass('fa-spinner fa-spin').addClass('fa-volume-up');
             currentSpeakerBtn = null;
         });
@@ -198,24 +234,15 @@ jQuery(document).ready(function ($) {
                     } else {
                         const messageText = parsedResponse.response.response;
 
-                        // Append bot message with speaker button
+                        // Append bot message
                         var $botMsg = $(`
                             <div class="chatbot-message bot-message">
-                                <div class="message-header">
-                                    Bot
-                                    <button class="speaker-btn" title="Play / Pause audio">
-                                        <i class="fas fa-volume-up"></i>
-                                    </button>
-                                </div>
+                                <div class="message-header">Bot</div>
                                 <div class="message-content">${messageText}</div>
                             </div>
                         `);
                         $('#codeness-chatbot-messages').append($botMsg);
                         scrollToBottom();
-
-                        // Auto-play TTS for the response
-                        var $speakerBtn = $botMsg.find('.speaker-btn');
-                        fetchAndPlayTTS(messageText, $speakerBtn);
                     }
                     scrollToBottom();
                 } catch (error) {
