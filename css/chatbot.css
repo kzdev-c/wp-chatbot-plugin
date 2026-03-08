@@ -173,6 +173,33 @@
   font-size: 12px;
 }
 
+/* Speaker / Pause button on bot messages */
+.speaker-btn {
+  all: initial;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 6px;
+  font-size: 12px;
+  opacity: 0.8;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  vertical-align: middle;
+}
+
+.speaker-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.speaker-btn .fa-spinner {
+  font-size: 11px;
+}
+
 
 /* Style for the spinner */
 .chatbot-message.loading-message {

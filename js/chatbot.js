@@ -6,6 +6,10 @@ jQuery(document).ready(function ($) {
     const sendButton = $('#codeness-chatbot-send');
     const messagesContainer = $('#codeness-chatbot-messages');
 
+    // TTS state
+    var currentAudio = null;
+    var currentSpeakerBtn = null;
+
     function scrollToBottom() {
         messagesContainer.stop().animate({
             scrollTop: messagesContainer[0].scrollHeight
@@ -40,11 +44,114 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    closeButton.on('click', hideChatbot);
+    closeButton.on('click', function () {
+        // Stop any playing audio when closing chatbot
+        stopCurrentAudio();
+        hideChatbot();
+    });
 
     inputField.on('click', function (event) {
         event.stopPropagation();
     });
+
+    // ──────────────────────────────────────
+    // TTS Functions
+    // ──────────────────────────────────────
+
+    function stopCurrentAudio() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+        if (currentSpeakerBtn) {
+            currentSpeakerBtn.find('i').removeClass('fa-pause fa-spinner fa-spin').addClass('fa-volume-up');
+            currentSpeakerBtn = null;
+        }
+    }
+
+    function fetchAndPlayTTS(text, $btn) {
+        // Stop any currently playing audio
+        stopCurrentAudio();
+
+        // Show loading spinner
+        $btn.find('i').removeClass('fa-volume-up fa-pause').addClass('fa-spinner fa-spin');
+        currentSpeakerBtn = $btn;
+
+        fetch(chatbotAjax.ttsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, voice: 'en-US-JennyNeural' })
+        })
+        .then(function (response) {
+            if (!response.ok) throw new Error('TTS request failed');
+            return response.blob();
+        })
+        .then(function (blob) {
+            var audioUrl = URL.createObjectURL(blob);
+            var audio = new Audio(audioUrl);
+
+            // Store audio reference on the button
+            $btn.data('audio', audio);
+            currentAudio = audio;
+            currentSpeakerBtn = $btn;
+
+            // Switch to pause icon
+            $btn.find('i').removeClass('fa-spinner fa-spin fa-volume-up').addClass('fa-pause');
+
+            audio.onended = function () {
+                $btn.find('i').removeClass('fa-pause').addClass('fa-volume-up');
+                currentAudio = null;
+                currentSpeakerBtn = null;
+            };
+
+            audio.onerror = function () {
+                $btn.find('i').removeClass('fa-pause fa-spinner fa-spin').addClass('fa-volume-up');
+                currentAudio = null;
+                currentSpeakerBtn = null;
+            };
+
+            audio.play();
+        })
+        .catch(function (error) {
+            $btn.find('i').removeClass('fa-spinner fa-spin').addClass('fa-volume-up');
+            currentSpeakerBtn = null;
+        });
+    }
+
+    // Delegate click on speaker buttons
+    messagesContainer.on('click', '.speaker-btn', function (e) {
+        e.stopPropagation();
+        var $btn = $(this);
+        var text = $btn.closest('.bot-message').find('.message-content').text();
+        var audio = $btn.data('audio');
+
+        // If a DIFFERENT message's audio is playing, stop it first
+        if (currentAudio && currentSpeakerBtn && currentSpeakerBtn[0] !== $btn[0]) {
+            stopCurrentAudio();
+        }
+
+        if (audio && !audio.paused) {
+            // Currently playing → pause
+            audio.pause();
+            $btn.find('i').removeClass('fa-pause').addClass('fa-volume-up');
+            currentAudio = audio;
+            currentSpeakerBtn = $btn;
+        } else if (audio && audio.paused && audio.currentTime > 0 && audio.currentTime < audio.duration) {
+            // Paused mid-way → resume
+            audio.play();
+            $btn.find('i').removeClass('fa-volume-up').addClass('fa-pause');
+            currentAudio = audio;
+            currentSpeakerBtn = $btn;
+        } else {
+            // No audio yet, or audio ended → fetch and play
+            fetchAndPlayTTS(text, $btn);
+        }
+    });
+
+    // ──────────────────────────────────────
+    // Send Message
+    // ──────────────────────────────────────
 
     function sendMessage() {
         var question = inputField.val();
@@ -90,12 +197,25 @@ jQuery(document).ready(function ($) {
                         `);
                     } else {
                         const messageText = parsedResponse.response.response;
-                        $('#codeness-chatbot-messages').append(`
+
+                        // Append bot message with speaker button
+                        var $botMsg = $(`
                             <div class="chatbot-message bot-message">
-                                <div class="message-header">Bot</div>
+                                <div class="message-header">
+                                    Bot
+                                    <button class="speaker-btn" title="Play / Pause audio">
+                                        <i class="fas fa-volume-up"></i>
+                                    </button>
+                                </div>
                                 <div class="message-content">${messageText}</div>
                             </div>
                         `);
+                        $('#codeness-chatbot-messages').append($botMsg);
+                        scrollToBottom();
+
+                        // Auto-play TTS for the response
+                        var $speakerBtn = $botMsg.find('.speaker-btn');
+                        fetchAndPlayTTS(messageText, $speakerBtn);
                     }
                     scrollToBottom();
                 } catch (error) {
@@ -121,7 +241,10 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    // Speech recognition (microphone)
+    // ──────────────────────────────────────
+    // Speech Recognition (microphone)
+    // ──────────────────────────────────────
+
     const micButton = $('#codeness-chatbot-mic');
     let isRecording = false;
     let recognition;
@@ -188,7 +311,6 @@ jQuery(document).ready(function ($) {
 
         recognition.onend = function () {
             micButton.removeClass('pulse-animation');
-            // If user hasn't explicitly stopped, restart recognition (continuous mode)
             if (isRecording) {
                 try {
                     recognition.start();

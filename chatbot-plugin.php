@@ -8,6 +8,7 @@ Icon: icon.png
 */
 
 define('CHATBOT_API_BASE_URL', 'https://web-chatbots.codenesslab.com');
+define('CHATBOT_TTS_BASE_URL', 'https://tts.codenesslab.com');
 
 function chatbot_html()
 {
@@ -39,6 +40,7 @@ function chatbot_enqueue_scripts()
 
     wp_localize_script('chatbot-js', 'chatbotAjax', [
         'ajaxurl' => admin_url('admin-ajax.php'),
+        'ttsUrl'  => CHATBOT_TTS_BASE_URL . '/tts',
     ]);
 }
 
