@@ -1,0 +1,81 @@
+.modern-form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333333;
+}
+
+.form-group input[type="text"] {
+    padding: 12px;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-group input[type="text"]:focus {
+    border-color: #0073aa;
+    outline: none;
+}
+
+.button-primary {
+    background-color: #0073aa;
+    color: #ffffff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button-primary:hover {
+    background-color: #005177;
+}
+
+.tab-content {
+    margin-top: 20px;
+    /* Add space above the tab body */
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+}
+
+.form-check-input {
+    margin-right: 10px;
+    /* Space between checkbox and label */
+}
+
+.loading {
+    display: none;
+    margin-top: 20px;
+}
+
+label[for="useSiteDomainCheckbox"] {
+    user-select: none;
+}
+
+.full-width {
+    max-width: unset !important;
+}
+
+.form-group input[type="text"] {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
