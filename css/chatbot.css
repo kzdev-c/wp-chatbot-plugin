@@ -1,0 +1,455 @@
+#codeness-chatbot {
+  position: fixed;
+  bottom: 70px;
+  right: 55px;
+  width: 300px;
+  height: 400px;
+  background-color: #f1f1f1;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease-in-out;
+  z-index: 999;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transform-origin: 70% 80%;
+}
+
+#codeness-chatbot.collapsed {
+  opacity: 0;
+  transform: translateY(20px) scale(0.1);
+  pointer-events: none;
+  transition: all 0.3s ease-in-out;
+}
+
+#codeness-chatbot.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+#codeness-chatbot-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: #d2232a;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 999999999999;
+  transition: transform 0.3s ease-in-out;
+}
+
+#codeness-chatbot.collapsed #codeness-chatbot-toggle {
+  transform: scale(1.2);
+}
+
+#codeness-chatbot-toggle:hover {
+  transform: scale(1.1);
+}
+
+#codeness-chatbot-header {
+  position: relative;
+  background-color: #d2232a;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-weight: bold;
+  border-radius: 10px 10px 0px 0px;
+  display: flex;
+  align-items: center;
+}
+
+#codeness-chatbot-close {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 30px;
+  height: 30px;
+  background-color: #d2232300;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  font-size: 25px;
+}
+
+#codeness-chatbot-maximize {
+  position: absolute;
+  top: 5px;
+  right: 26px;
+  width: 30px;
+  height: 30px;
+  background-color: #d2232300;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  font-size: 17px;
+}
+
+#codeness-chatbot-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+}
+
+#chatbot-input-container {
+  background-color: white;
+  display: flex;
+  align-items: center;
+  gap: 4%;
+  border-radius: 0px 0px 14px 14px;
+  padding: 2% 3%;
+}
+
+#codeness-chatbot-input {
+  all: initial;
+  border: none;
+  padding: 10px;
+  width: calc(100% - 50px);
+  box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  height: auto;
+  min-height: 40px;
+  margin-bottom: 0;
+  border-radius: 0 0 0 10px;
+  outline: none;
+}
+
+#codeness-chatbot-send {
+  background-color: #d2232a;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  margin-left: 5px;
+  margin-bottom: 0;
+  margin-right: 0;
+}
+
+#codeness-chatbot-send i {
+  font-size: 16px;
+  color: white;
+}
+
+.chatbot-message {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Add this line for elevation effect */
+  transition: box-shadow 0.3s ease;
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: whitesmoke;
+  color: black;
+  border-radius: 15px 15px 0 15px;
+  padding: 10px;
+  float: right;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Add this line for elevation effect */
+  transition: box-shadow 0.3s ease;
+}
+
+.bot-message {
+  align-self: flex-start;
+  background-color: #d2232a;
+  color: white;
+  border-radius: 15px 15px 15px 0px;
+  padding: 10px;
+}
+
+.message-header {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.message-content {
+  font-size: 12px;
+}
+
+
+/* Style for the spinner */
+.chatbot-message.loading-message {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+}
+
+#codeness-chatbot-loading {
+  box-shadow: none;
+  max-width: unset !important;
+}
+
+
+#bot-image {
+  width: 110%;
+  height: 110%;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  /* Adds a shadow */
+}
+
+#bot-image-header {
+  width: 10%;
+  height: 90%;
+  margin-right: 3%;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  /* Adds a shadow */
+}
+
+.loader {
+  height: 20px;
+  margin: 0 auto;
+  aspect-ratio: 2.5;
+  --_g: no-repeat radial-gradient(farthest-side, #d2232a 90%, #0000);
+  background: var(--_g), var(--_g), var(--_g), var(--_g);
+  background-size: 20% 50%;
+  animation: l43 1s infinite linear;
+}
+
+@keyframes l43 {
+  0% {
+    background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50%
+  }
+
+  16.67% {
+    background-position: calc(0*100%/3) 0, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50%
+  }
+
+  33.33% {
+    background-position: calc(0*100%/3) 100%, calc(1*100%/3) 0, calc(2*100%/3) 50%, calc(3*100%/3) 50%
+  }
+
+  50% {
+    background-position: calc(0*100%/3) 50%, calc(1*100%/3) 100%, calc(2*100%/3) 0, calc(3*100%/3) 50%
+  }
+
+  66.67% {
+    background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 100%, calc(3*100%/3) 0
+  }
+
+  83.33% {
+    background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 100%
+  }
+
+  100% {
+    background-position: calc(0*100%/3) 50%, calc(1*100%/3) 50%, calc(2*100%/3) 50%, calc(3*100%/3) 50%
+  }
+}
+
+.prompt-buttons {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.yes-no-buttons {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 16px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Style for the modal */
+#form-modal {
+  animation: fade-in 1s ease;
+  width: 50%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 20%;
+  left: 26%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Style for the modal content */
+#form-modal .modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Style for the close button */
+#form-modal .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Style for the form */
+#contact-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style for the labels and inputs */
+#contact-form label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#contact-form input {
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+/* Style for the submit button */
+#contact-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007BFF;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#contact-form button:hover {
+  background-color: #0056b3;
+}
+
+/* Show the modal */
+#form-modal.show {
+  display: flex;
+  opacity: 1;
+  /* Fully opaque */
+}
+
+/* Scale up the modal content */
+#form-modal.show .modal-content {
+  transform: scale(1);
+  /* Normal scale */
+}
+
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.color-red {
+  color: #d2232a;
+}
+
+.color-green {
+  color: #215321;
+}
+
+.color-green,
+.color-red {
+  padding: 10px;
+  background: wheat;
+  margin: 10px;
+  border-radius: 10px;
+}
+
+#codeness-chatbot-mic,
+#codeness-chatbot-send {
+  all: initial;
+  transition: color 0.3s ease, transform 0.3s ease;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  margin: 0 2%;
+}
+
+#codeness-chatbot-send i {
+  color: #a61b1f;
+}
+
+#codeness-chatbot-mic:hover,
+#codeness-chatbot-send:hover {
+  color: #a61b1f;
+  transform: scale(1.2);
+}
+
+#language-select {
+  all: initial;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+  display: flex;
+  width: 40px;
+  text-align: center;
+}
+
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 1.5s infinite;
+}
+
+
+/* #codeness-chatbot.fullscreen {
+  transform: translate(-50%, -50%) scale(1);
+  width: 60%;
+  height: 70%;
+  top: 15%;
+  left: 20%;
+  bottom: auto;
+  right: auto;
+  border-radius: 15px;
+} */
