@@ -1,7 +1,19 @@
+<?php
+$chatbot_name = get_option('chatbot_name', 'Chatbot');
+$theme_color  = get_option('chatbot_theme_color', '#d2232a');
+$text_color   = get_option('chatbot_text_color', '#ffffff');
+?>
+<style>
+    :root {
+        --chatbot-theme-color: <?php echo esc_attr($theme_color); ?>;
+        --chatbot-text-color: <?php echo esc_attr($text_color); ?>;
+    }
+</style>
+
 <div id="codeness-chatbot" class="collapsed">
     <div id="codeness-chatbot-header">
         <img src="<?php echo plugin_dir_url(__FILE__); ?>icon.png" alt="Chatbot Icon" id="bot-image-header">
-        <span>Chatbot</span>
+        <span><?php echo esc_html($chatbot_name); ?></span>
         <span id="codeness-chatbot-close">-</span>
     </div>
 

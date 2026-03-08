@@ -9,7 +9,6 @@
   border-radius: 10px;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease-in-out;
   z-index: 999;
   opacity: 0;
   transform: translateY(20px);
@@ -35,8 +34,8 @@
   right: 20px;
   width: 50px;
   height: 50px;
-  background-color: #d2232a;
-  color: white;
+  background-color: var(--chatbot-theme-color, #d2232a);
+  color: var(--chatbot-text-color, #ffffff);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -56,8 +55,8 @@
 
 #codeness-chatbot-header {
   position: relative;
-  background-color: #d2232a;
-  color: white;
+  background-color: var(--chatbot-theme-color, #d2232a);
+  color: var(--chatbot-text-color, #ffffff);
   padding: 10px;
   text-align: center;
   font-weight: bold;
@@ -72,8 +71,8 @@
   right: 0px;
   width: 30px;
   height: 30px;
-  background-color: #d2232300;
-  color: white;
+  background-color: transparent;
+  color: var(--chatbot-text-color, #ffffff);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -81,23 +80,6 @@
   cursor: pointer;
   border: none;
   font-size: 25px;
-}
-
-#codeness-chatbot-maximize {
-  position: absolute;
-  top: 5px;
-  right: 26px;
-  width: 30px;
-  height: 30px;
-  background-color: #d2232300;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  border: none;
-  font-size: 17px;
 }
 
 #codeness-chatbot-messages {
@@ -135,7 +117,7 @@
 }
 
 #codeness-chatbot-send {
-  background-color: #d2232a;
+  background-color: var(--chatbot-theme-color, #d2232a);
   border: none;
   padding: 10px;
   cursor: pointer;
@@ -150,7 +132,7 @@
 
 #codeness-chatbot-send i {
   font-size: 16px;
-  color: white;
+  color: var(--chatbot-text-color, #ffffff);
 }
 
 .chatbot-message {
@@ -159,7 +141,6 @@
   flex-direction: column;
   max-width: 70%;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  /* Add this line for elevation effect */
   transition: box-shadow 0.3s ease;
 }
 
@@ -171,14 +152,13 @@
   padding: 10px;
   float: right;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  /* Add this line for elevation effect */
   transition: box-shadow 0.3s ease;
 }
 
 .bot-message {
   align-self: flex-start;
-  background-color: #d2232a;
-  color: white;
+  background-color: var(--chatbot-theme-color, #d2232a);
+  color: var(--chatbot-text-color, #ffffff);
   border-radius: 15px 15px 15px 0px;
   padding: 10px;
 }
@@ -212,7 +192,6 @@
   height: 110%;
   border-radius: 50%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  /* Adds a shadow */
 }
 
 #bot-image-header {
@@ -221,14 +200,13 @@
   margin-right: 3%;
   border-radius: 50%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  /* Adds a shadow */
 }
 
 .loader {
   height: 20px;
   margin: 0 auto;
   aspect-ratio: 2.5;
-  --_g: no-repeat radial-gradient(farthest-side, #d2232a 90%, #0000);
+  --_g: no-repeat radial-gradient(farthest-side, var(--chatbot-theme-color, #d2232a) 90%, #0000);
   background: var(--_g), var(--_g), var(--_g), var(--_g);
   background-size: 20% 50%;
   animation: l43 1s infinite linear;
@@ -267,7 +245,7 @@
 .error-message {
   align-self: center;
   background-color: #ffdddd;
-  color: #d2232a;
+  color: var(--chatbot-theme-color, #d2232a);
   border-radius: 10px;
   padding: 8px 12px;
   font-size: 12px;
@@ -287,12 +265,12 @@
 }
 
 #codeness-chatbot-send i {
-  color: #a61b1f;
+  color: var(--chatbot-theme-color, #d2232a);
 }
 
 #codeness-chatbot-mic:hover,
 #codeness-chatbot-send:hover {
-  color: #a61b1f;
+  color: var(--chatbot-theme-color, #d2232a);
   transform: scale(1.2);
 }
 
@@ -325,15 +303,3 @@
 .pulse-animation {
   animation: pulse 1.5s infinite;
 }
-
-
-/* #codeness-chatbot.fullscreen {
-  transform: translate(-50%, -50%) scale(1);
-  width: 60%;
-  height: 70%;
-  top: 15%;
-  left: 20%;
-  bottom: auto;
-  right: auto;
-  border-radius: 15px;
-} */

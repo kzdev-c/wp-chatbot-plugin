@@ -145,7 +145,11 @@ jQuery(document).ready(function ($) {
             e.preventDefault();
 
             if (!isRecording) {
-                recognition.start();
+                try {
+                    recognition.start();
+                } catch (err) {
+                    // Already started, ignore
+                }
                 micButton.css('color', 'red');
                 isRecording = true;
             } else {
@@ -155,7 +159,10 @@ jQuery(document).ready(function ($) {
             }
         });
 
-        recognition.onstart = function () {};
+        recognition.onstart = function () {
+            isRecording = true;
+            micButton.css('color', 'red');
+        };
 
         recognition.onaudiostart = function () {
             micButton.addClass('pulse-animation');
@@ -166,7 +173,10 @@ jQuery(document).ready(function ($) {
         };
 
         recognition.onresult = function (event) {
-            const transcript = event.results[0][0].transcript;
+            var transcript = '';
+            for (var i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
             inputField.val(inputField.val() + transcript);
         };
 
@@ -177,8 +187,18 @@ jQuery(document).ready(function ($) {
         };
 
         recognition.onend = function () {
-            micButton.css('color', '');
-            isRecording = false;
+            micButton.removeClass('pulse-animation');
+            // If user hasn't explicitly stopped, restart recognition (continuous mode)
+            if (isRecording) {
+                try {
+                    recognition.start();
+                } catch (err) {
+                    micButton.css('color', '');
+                    isRecording = false;
+                }
+            } else {
+                micButton.css('color', '');
+            }
         };
     }
 });
