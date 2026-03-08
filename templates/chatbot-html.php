@@ -1,9 +1,8 @@
 <div id="codeness-chatbot" class="collapsed">
     <div id="codeness-chatbot-header">
         <img src="<?php echo plugin_dir_url(__FILE__); ?>icon.png" alt="Chatbot Icon" id="bot-image-header">
-        <span><?php echo get_option('chatbot_name'); ?></span>
+        <span>Chatbot</span>
         <span id="codeness-chatbot-close">-</span>
-        <!-- <span id="codeness-chatbot-maximize">⤢</span> -->
     </div>
 
     <div id="codeness-chatbot-messages">
@@ -29,29 +28,4 @@
 
 <div id="codeness-chatbot-toggle">
     <img src="<?php echo plugin_dir_url(__FILE__); ?>icon.png" alt="Chatbot Icon" id="bot-image">
-</div>
-
-<div id="form-modal" class="modal">
-    <div class="modal-content">
-        <span id="close-modal" class="close">&times;</span>
-        <h2>Contact Information</h2>
-        <form id="contact-form">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required><br>
-
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required><br>
-
-            <label for="phone">Phone:</label>
-            <input type="tel" id="phone" name="phone" required><br>
-
-            <label for="interest">Interest:</label>
-            <input type="text" id="interest" name="interest" required><br>
-
-            <button id="submit-visitor-info" type="submit">Submit</button>
-        </form>
-        <div id="info-response">
-
-        </div>
-    </div>
 </div>
