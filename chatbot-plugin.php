@@ -2,7 +2,7 @@
 /*
 Plugin Name: Chatbot Plugin
 Description: A simple chatbot that interacts with an external API.
-Version: 1.0
+Version: 1.1
 Author: codenesslab
 Icon: icon.png
 */
@@ -31,6 +31,15 @@ function chatbot_add_admin_menu()
     );
 
     add_submenu_page(
+        'chatbot_settings',
+        __('Live Chat Settings', 'chatbot-plugin'),
+        __('Live Chat', 'chatbot-plugin'),
+        'manage_options',
+        'chatbot_livechat_settings',
+        'chatbot_livechat_settings_page'
+    );
+
+    add_submenu_page(
         'chatbot_settings', 
         __('Web Scraping', 'chatbot-plugin'),
         __('Web Scraping', 'chatbot-plugin'),
@@ -49,6 +58,10 @@ function chatbot_settings_page() {
     include plugin_dir_path(__FILE__) . '/templates/chatbot-settings-page.php';
 }
 
+function chatbot_livechat_settings_page() {
+    include plugin_dir_path(__FILE__) . '/templates/chatbot-livechat-settings-page.php';
+}
+
 function chatbot_web_scraping_page() {
     include plugin_dir_path(__FILE__) . '/templates/chatbot-web-scraping-page.php';
 }
@@ -60,18 +73,20 @@ function chatbot_file_upload_page() {
 
 function chatbot_enqueue_scripts($hook) {
     wp_enqueue_style('chatbot-css', plugin_dir_url(__FILE__) . 'css/chatbot.css');
-    wp_enqueue_script('chatbot-js', plugin_dir_url(__FILE__) . 'js/chatbot.js', ['jquery'], null, true);
+    wp_enqueue_script('chatbot-js', plugin_dir_url(__FILE__) . 'js/chatbot.js', ['jquery'], '1.1', true);
     wp_enqueue_script('chatbot-scrapping-js', plugin_dir_url(__FILE__) . 'js/chatbotScrapping.js', ['jquery'], null, true);
     wp_enqueue_script('chatbot-settings-js', plugin_dir_url(__FILE__) . 'js/chatbotSettings.js', ['jquery'], null, true);
     wp_enqueue_script('chatbot-check-files-js', plugin_dir_url(__FILE__) . 'js/chatbotSettings.js', ['jquery'], null, true);
 
     // Ensure the correct hook is used for the credentials page
-    if ($hook === 'toplevel_page_chatbot_settings' || $hook === 'chatbot_page_chatbot_web_scraping' || $hook === 'chatbot_page_chatbot_file_upload') {
+    if ($hook === 'toplevel_page_chatbot_settings' || $hook === 'chatbot_page_chatbot_web_scraping' || $hook === 'chatbot_page_chatbot_file_upload' || $hook === 'chatbot_page_chatbot_livechat_settings') {
         wp_enqueue_style('settings-css', plugin_dir_url(__FILE__) . 'css/settings.css');
     }
 
     wp_localize_script('chatbot-js', 'chatbotAjax', [
-        'ajaxurl' => admin_url('admin-ajax.php'),
+        'ajaxurl'            => admin_url('admin-ajax.php'),
+        'livechat_enabled'   => get_option('livechat_enabled', '0'),
+        'livechat_poll_interval' => intval(get_option('livechat_poll_interval', 3)),
     ]);
 
     wp_localize_script('chatbot-settings-js', 'checkCredentialsAjax', [
@@ -132,7 +147,36 @@ function chatbot_submit_visitor_info()
     include plugin_dir_path(__FILE__) . '/functions/chatbot-submit-visitor-info.php';
 }
 
+// Live Chat AJAX handlers
+function chatbot_livechat_send()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-livechat-send.php';
+}
 
+function chatbot_livechat_typing()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-livechat-typing.php';
+}
+
+function chatbot_livechat_close()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-livechat-close.php';
+}
+
+function chatbot_livechat_rate()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-livechat-rate.php';
+}
+
+function chatbot_livechat_poll()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-livechat-poll.php';
+}
+
+function chatbot_save_livechat_settings()
+{
+    include plugin_dir_path(__FILE__) . '/functions/chatbot-save-livechat-settings.php';
+}
 
 function chatbot_default_settings()
 {
@@ -158,6 +202,20 @@ function chatbot_default_settings()
     if (get_option('chatbot_name') === false) {
         update_option('chatbot_name', '');
     }
+
+    // Live Chat defaults
+    if (get_option('livechat_base_url') === false) {
+        update_option('livechat_base_url', 'https://chatbot-dashboard.local/api/livechat');
+    }
+    if (get_option('livechat_token') === false) {
+        update_option('livechat_token', '');
+    }
+    if (get_option('livechat_enabled') === false) {
+        update_option('livechat_enabled', '0');
+    }
+    if (get_option('livechat_poll_interval') === false) {
+        update_option('livechat_poll_interval', '3');
+    }
 }
 
 add_action('admin_menu', 'chatbot_add_admin_menu');
@@ -182,5 +240,23 @@ add_action('wp_ajax_chatbot_check_files', 'chatbot_check_files');
 
 add_action('wp_ajax_submit_visitor_info', 'chatbot_submit_visitor_info');
 add_action('wp_ajax_nopriv_submit_visitor_info', 'chatbot_submit_visitor_info');
+
+// Live Chat AJAX actions (both logged-in and guest visitors)
+add_action('wp_ajax_livechat_send_message', 'chatbot_livechat_send');
+add_action('wp_ajax_nopriv_livechat_send_message', 'chatbot_livechat_send');
+
+add_action('wp_ajax_livechat_typing', 'chatbot_livechat_typing');
+add_action('wp_ajax_nopriv_livechat_typing', 'chatbot_livechat_typing');
+
+add_action('wp_ajax_livechat_close', 'chatbot_livechat_close');
+add_action('wp_ajax_nopriv_livechat_close', 'chatbot_livechat_close');
+
+add_action('wp_ajax_livechat_rate', 'chatbot_livechat_rate');
+add_action('wp_ajax_nopriv_livechat_rate', 'chatbot_livechat_rate');
+
+add_action('wp_ajax_livechat_poll', 'chatbot_livechat_poll');
+add_action('wp_ajax_nopriv_livechat_poll', 'chatbot_livechat_poll');
+
+add_action('wp_ajax_save_livechat_settings', 'chatbot_save_livechat_settings');
 
 add_action('admin_init', 'chatbot_default_settings');

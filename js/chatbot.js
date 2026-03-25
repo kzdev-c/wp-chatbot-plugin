@@ -8,6 +8,27 @@ jQuery(document).ready(function ($) {
     const modal = $('#form-modal');
     const closeModalButton = $('#close-modal');
 
+    // ===== Live Chat State =====
+    let isLiveChatMode = false;
+    let liveChatSessionId = null;
+    let liveChatId = null;
+    let lastMessageId = 0;
+    let pollTimer = null;
+    const livechatEnabled = (typeof chatbotAjax !== 'undefined' && chatbotAjax.livechat_enabled === '1');
+    const pollInterval = (typeof chatbotAjax !== 'undefined' && chatbotAjax.livechat_poll_interval)
+        ? parseInt(chatbotAjax.livechat_poll_interval) * 1000
+        : 3000;
+
+    // Generate a unique session ID for this visitor (persisted via sessionStorage)
+    function getSessionId() {
+        let sid = sessionStorage.getItem('chatbot_livechat_session_id');
+        if (!sid) {
+            sid = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            sessionStorage.setItem('chatbot_livechat_session_id', sid);
+        }
+        return sid;
+    }
+
     function scrollToBottom() {
         messagesContainer.stop().animate({
             scrollTop: messagesContainer[0].scrollHeight
@@ -42,17 +63,249 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    closeButton.on('click', hideChatbot);
+    closeButton.on('click', function () {
+        hideChatbot();
+        // If in live chat mode, optionally close the chat
+        if (isLiveChatMode && liveChatId) {
+            closeLiveChat();
+        }
+    });
 
     inputField.on('click', function (event) {
         event.stopPropagation();
     });
 
+    // ===== Live Chat Mode UI Updates =====
+    function enterLiveChatMode() {
+        isLiveChatMode = true;
+        liveChatSessionId = getSessionId();
+
+        // Update header to show live chat indicator
+        $('#codeness-chatbot-header span:first-of-type').text('Live Chat');
+        chatbot.addClass('livechat-active');
+
+        // Disable mic/TTS completely
+        disableTTS();
+
+        // Show a system message
+        appendSystemMessage('You are now connected to a live agent. Please wait for a response.');
+
+        // Start polling for agent messages
+        startPolling();
+    }
+
+    function exitLiveChatMode() {
+        isLiveChatMode = false;
+        liveChatId = null;
+        lastMessageId = 0;
+
+        // Restore header
+        const chatbotName = chatbot.find('#codeness-chatbot-header span:first-of-type');
+        // We can't easily get the original name, so we leave it or restore from a data attribute
+        chatbot.removeClass('livechat-active');
+
+        // Re-enable mic/TTS
+        enableTTS();
+
+        // Stop polling
+        stopPolling();
+    }
+
+    function disableTTS() {
+        const micBtn = $('#codeness-chatbot-mic');
+        const langSel = $('#language-select');
+
+        // Stop any active recognition
+        if (isRecording && recognition) {
+            recognition.stop();
+            isRecording = false;
+            micBtn.css('color', '');
+            micBtn.removeClass('pulse-animation');
+        }
+
+        micBtn.prop('disabled', true).addClass('tts-disabled').attr('title', 'Mic disabled during live chat');
+        langSel.prop('disabled', true).addClass('tts-disabled');
+    }
+
+    function enableTTS() {
+        const micBtn = $('#codeness-chatbot-mic');
+        const langSel = $('#language-select');
+
+        micBtn.prop('disabled', false).removeClass('tts-disabled').attr('title', '');
+        langSel.prop('disabled', false).removeClass('tts-disabled');
+    }
+
+    function appendSystemMessage(text) {
+        messagesContainer.append(`
+            <div class="chatbot-message system-message">
+                <div class="message-content"><em>${text}</em></div>
+            </div>
+        `);
+        scrollToBottom();
+    }
+
+    function appendAgentMessage(text) {
+        messagesContainer.append(`
+            <div class="chatbot-message bot-message agent-message">
+                <div class="message-header">Agent</div>
+                <div class="message-content">${text}</div>
+            </div>
+        `);
+        scrollToBottom();
+    }
+
+    // ===== Polling for Live Chat Messages =====
+    function startPolling() {
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(pollForMessages, pollInterval);
+    }
+
+    function stopPolling() {
+        if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+        }
+    }
+
+    function pollForMessages() {
+        if (!isLiveChatMode || !liveChatSessionId) return;
+
+        $.ajax({
+            url: chatbotAjax.ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'livechat_poll',
+                session_id: liveChatSessionId,
+                last_message_id: lastMessageId
+            },
+            success: function (response) {
+                try {
+                    const parsed = typeof response === 'string' ? JSON.parse(response) : response;
+                    if (parsed.success && parsed.data) {
+                        const data = parsed.data;
+
+                        // Handle messages array if returned
+                        if (data.messages && Array.isArray(data.messages)) {
+                            data.messages.forEach(function (msg) {
+                                if (msg.sender_type === 'agent' || msg.sender_type === 'system') {
+                                    appendAgentMessage(msg.message || msg.content || '');
+                                    if (msg.id && msg.id > lastMessageId) {
+                                        lastMessageId = msg.id;
+                                    }
+                                }
+                            });
+                        }
+
+                        // If chat was closed by agent
+                        if (data.status === 'closed') {
+                            appendSystemMessage('The chat has been closed by the agent.');
+                            exitLiveChatMode();
+                        }
+                    }
+                } catch (e) {
+                    // Silently fail polling errors
+                }
+            },
+            error: function () {
+                // Silently fail polling errors
+            }
+        });
+    }
+
+    // ===== Send via Live Chat =====
+    function sendLiveChatMessage(message) {
+        // Show user message
+        messagesContainer.append(`
+            <div class="chatbot-message user-message">
+                <div class="message-header">You</div>
+                <div class="message-content">${message}</div>
+            </div>
+        `);
+        inputField.val('');
+        scrollToBottom();
+
+        // Send typing indicator first
+        $.ajax({
+            url: chatbotAjax.ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'livechat_typing',
+                session_id: liveChatSessionId
+            }
+        });
+
+        // Send the actual message
+        $.ajax({
+            url: chatbotAjax.ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'livechat_send_message',
+                session_id: liveChatSessionId,
+                message: message
+            },
+            success: function (response) {
+                console.log('[LiveChat DEBUG] Raw response:', response);
+                try {
+                    const parsed = typeof response === 'string' ? JSON.parse(response) : response;
+                    // console.log('[LiveChat DEBUG] Parsed response:', parsed);
+                    // if (parsed._debug) {
+                    //     console.log('[LiveChat DEBUG] Request URL:', parsed._debug.url);
+                    //     console.log('[LiveChat DEBUG] HTTP Code:', parsed._debug.http_code);
+                    //     console.log('[LiveChat DEBUG] Post Data:', parsed._debug.post_data);
+                    //     console.log('[LiveChat DEBUG] API Raw Response:', parsed._debug.raw_response);
+                    // }
+                    if (parsed.success && parsed.data) {
+                        // Store chat_id if returned
+                        if (parsed.data.chat_id) {
+                            liveChatId = parsed.data.chat_id;
+                        }
+                        if (parsed.data.message_id && parsed.data.message_id > lastMessageId) {
+                            lastMessageId = parsed.data.message_id;
+                        }
+                    } else if (parsed.error) {
+                        appendSystemMessage('Error: ' + parsed.error);
+                    }
+                } catch (e) {
+                    console.error('[LiveChat DEBUG] Parse error:', e, 'Raw:', response);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('[LiveChat DEBUG] AJAX error:', status, error, xhr.responseText);
+                appendSystemMessage('Failed to send message. Please try again.');
+            }
+        });
+    }
+
+    // ===== Close Live Chat =====
+    function closeLiveChat() {
+        if (!liveChatId) return;
+
+        $.ajax({
+            url: chatbotAjax.ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'livechat_close',
+                chat_id: liveChatId
+            },
+            success: function () {
+                exitLiveChatMode();
+            }
+        });
+    }
+
+    // ===== Main Send Message (AI or Live Chat) =====
     function sendMessage() {
         var question = inputField.val();
 
         if (question.trim() === '') return;
 
+        // If in live chat mode, route to live chat
+        if (isLiveChatMode) {
+            sendLiveChatMessage(question);
+            return;
+        }
+
+        // Otherwise, use the AI chatbot
         $('#codeness-chatbot-messages').append(`
             <div class="chatbot-message user-message">
                 <div class="message-header">You</div>
@@ -81,10 +334,27 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 try {
                     const parsedResponse = JSON.parse(response);
+
+                    // Handle error responses from the backend
+                    if (parsedResponse.error) {
+                        $('#codeness-chatbot-loading').remove();
+                        $('#codeness-chatbot-messages').append(`
+                            <div class="chatbot-message error-message">${parsedResponse.error}</div>
+                        `);
+                        scrollToBottom();
+                        return;
+                    }
+
                     const messageText = parsedResponse.response.response;
                     const prompt_message = parsedResponse.response.prompt_message;
 
+                    // ===== Check for x-key handoff =====
+                    const xKey = parsedResponse.response['x-key'];
+                    // const shouldHandoff = (xKey === true || xKey === 'true');
+                    const shouldHandoff = true;
+
                     $('#codeness-chatbot-loading').remove();
+
                     if (prompt_message) {
                         $('#codeness-chatbot-messages').append(`
                             <div class="chatbot-message bot-message prompt-message">
@@ -108,8 +378,13 @@ jQuery(document).ready(function ($) {
                     `);
                     }
                     scrollToBottom();
+
+                    // If x-key is true AND live chat is enabled in settings, switch to live chat
+                    if (shouldHandoff && livechatEnabled) {
+                        enterLiveChatMode();
+                    }
+
                 } catch (error) {
-                    // console.error("Error parsing the response:", error);
                     $('#codeness-chatbot-loading').remove();
                     $('#codeness-chatbot-messages').append('<div class="chatbot-message error-message">Error communicating with the chatbot.</div>');
                     scrollToBottom();
@@ -179,7 +454,25 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    // ===== Typing indicator for live chat (debounced) =====
+    let typingTimeout = null;
+    inputField.on('input', function () {
+        if (isLiveChatMode && liveChatSessionId) {
+            if (typingTimeout) clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(function () {
+                $.ajax({
+                    url: chatbotAjax.ajaxurl,
+                    method: 'POST',
+                    data: {
+                        action: 'livechat_typing',
+                        session_id: liveChatSessionId
+                    }
+                });
+            }, 500);
+        }
+    });
 
+    // ===== Speech Recognition / TTS =====
     const micButton = $('#codeness-chatbot-mic');
     let isRecording = false;
     let recognition;
@@ -188,7 +481,6 @@ jQuery(document).ready(function ($) {
 
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
         micButton.prop('disabled', true).attr('title', 'Speech recognition not supported in this browser.');
-        // console.warn('Speech recognition is not supported in this browser.');
     } else {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
@@ -198,54 +490,51 @@ jQuery(document).ready(function ($) {
 
         langSelect.on('change', function () {
             recognition.lang = $(this).val();
-            // console.log('Language changed to:', recognition.lang);
         });
 
         micButton.on('click', function (e) {
             e.preventDefault();
 
+            // Block mic if in live chat mode
+            if (isLiveChatMode) {
+                return;
+            }
+
             if (!isRecording) {
                 recognition.start();
                 micButton.css('color', 'red');
                 isRecording = true;
-                // console.log('Mic button clicked, starting recognition...');
             } else {
                 recognition.stop();
                 micButton.css('color', '');
                 isRecording = false;
-                // console.log('Mic button clicked, stopping recognition...');
             }
         });
 
         recognition.onstart = function () {
-            // console.log('Speech recognition started...');
+            // Speech recognition started
         };
 
         recognition.onaudiostart = function () {
-            // console.log('Audio detected, starting animation...');
             micButton.addClass('pulse-animation');
         };
 
         recognition.onaudioend = function () {
-            // console.log('Audio stopped, ending animation...');
             micButton.removeClass('pulse-animation');
         };
 
         recognition.onresult = function (event) {
             const transcript = event.results[0][0].transcript;
-            // console.log('Transcript received:', transcript);
             inputField.val(inputField.val() + transcript);
         };
 
         recognition.onerror = function (event) {
-            // console.error('Speech recognition error:', event.error);
             micButton.css('color', '');
             micButton.removeClass('pulse-animation');
             isRecording = false;
         };
 
         recognition.onend = function () {
-            // console.log('Speech recognition ended.');
             micButton.css('color', '');
             isRecording = false;
         };

@@ -6,7 +6,7 @@ $token    = sanitize_text_field($_POST['token']);
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-    CURLOPT_URL            => 'https://chatbots-dashboard.codenesslab.com/api/check-user-credentials',
+    CURLOPT_URL            => 'https://chatbot-dashboard.local/api/check-user-credentials',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_ENCODING => '',
@@ -25,6 +25,7 @@ curl_setopt_array($curl, [
 ]);
 
 $response = curl_exec($curl);
+echo $response;
 
 $response_data = json_decode($response, true);
 

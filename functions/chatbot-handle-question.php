@@ -23,6 +23,10 @@ switch ($module) {
         break;
 
     case 'file_upload':
+        if (empty($file)) {
+            echo json_encode(['error' => 'File name is not configured. Please set it in Chatbot Settings.']);
+            wp_die();
+        }
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
@@ -51,6 +55,7 @@ $curl = curl_init();
 curl_setopt_array($curl, [
     CURLOPT_URL            => $api_url,
     CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_ENCODING       => '',
     CURLOPT_MAXREDIRS      => 10,
     CURLOPT_TIMEOUT        => 0,
