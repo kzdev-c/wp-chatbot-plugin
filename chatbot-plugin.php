@@ -72,8 +72,12 @@ function chatbot_file_upload_page() {
 
 
 function chatbot_enqueue_scripts($hook) {
+    // Add Pusher and Echo for WebSockets
+    wp_enqueue_script('pusher-js', 'https://js.pusher.com/8.2.0/pusher.min.js', [], null, true);
+    wp_enqueue_script('laravel-echo', 'https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.min.js', [], null, true);
+
     wp_enqueue_style('chatbot-css', plugin_dir_url(__FILE__) . 'css/chatbot.css');
-    wp_enqueue_script('chatbot-js', plugin_dir_url(__FILE__) . 'js/chatbot.js', ['jquery'], '1.1', true);
+    wp_enqueue_script('chatbot-js', plugin_dir_url(__FILE__) . 'js/chatbot.js', ['jquery', 'laravel-echo'], '1.1', true);
     wp_enqueue_script('chatbot-scrapping-js', plugin_dir_url(__FILE__) . 'js/chatbotScrapping.js', ['jquery'], null, true);
     wp_enqueue_script('chatbot-settings-js', plugin_dir_url(__FILE__) . 'js/chatbotSettings.js', ['jquery'], null, true);
     wp_enqueue_script('chatbot-check-files-js', plugin_dir_url(__FILE__) . 'js/chatbotSettings.js', ['jquery'], null, true);
@@ -83,10 +87,13 @@ function chatbot_enqueue_scripts($hook) {
         wp_enqueue_style('settings-css', plugin_dir_url(__FILE__) . 'css/settings.css');
     }
 
+    $base_url = get_option('livechat_base_url', '');
+    $ws_host = !empty($base_url) ? parse_url($base_url, PHP_URL_HOST) : 'chatbot-dashboard.local';
+
     wp_localize_script('chatbot-js', 'chatbotAjax', [
         'ajaxurl'            => admin_url('admin-ajax.php'),
         'livechat_enabled'   => get_option('livechat_enabled', '0'),
-        'livechat_poll_interval' => intval(get_option('livechat_poll_interval', 3)),
+        'livechat_ws_host'   => $ws_host,
     ]);
 
     wp_localize_script('chatbot-settings-js', 'checkCredentialsAjax', [

@@ -154,62 +154,52 @@ jQuery(document).ready(function ($) {
         scrollToBottom();
     }
 
-    // ===== Polling for Live Chat Messages =====
+    // ===== WebSockets / Reverb for Live Chat Messages =====
     function startPolling() {
-        if (pollTimer) clearInterval(pollTimer);
-        pollTimer = setInterval(pollForMessages, pollInterval);
+        if (!liveChatId) return;
+
+        // Initialize Laravel Echo if not already initialized
+        if (!window.Echo) {
+            window.Echo = new window.Echo({
+                broadcaster: 'reverb',
+                key: 'vxndobokdf3gjybrbjuj', // Provided Reverb Key
+                wsHost: chatbotAjax.livechat_ws_host,
+                wsPort: 8089,
+                wssPort: 8089,
+                forceTLS: false,
+                enabledTransports: ['ws', 'wss'],
+            });
+        }
+
+        // Subscribe to chat channel
+        window.Echo.channel(`livechat.${liveChatId}`)
+            .listen('ChatMessageSent', (e) => {
+                console.log('[LiveChat DEBUG] Websocket New Message:', e);
+                if (e.sender_type === 'agent' || e.sender_type === 'system') {
+                    if (e.message === '[[CHAT_RESOLVED]]') {
+                        appendSystemMessage('The chat has been closed by the agent.');
+                        exitLiveChatMode();
+                    } else {
+                        // Avoid duplicates if same ID is ever emitted twice
+                        if (!e.id || e.id > lastMessageId) {
+                            appendAgentMessage(e.message || e.content || '');
+                            if (e.id) lastMessageId = e.id;
+                        }
+                    }
+                }
+            })
+            .listen('TypingIndicator', (e) => {
+                if (e.sender_type === 'agent') {
+                    console.log('[LiveChat DEBUG] Agent is typing...');
+                    // Optional: show typing bubbles
+                }
+            });
     }
 
     function stopPolling() {
-        if (pollTimer) {
-            clearInterval(pollTimer);
-            pollTimer = null;
+        if (window.Echo && liveChatId) {
+            window.Echo.leaveChannel(`livechat.${liveChatId}`);
         }
-    }
-
-    function pollForMessages() {
-        if (!isLiveChatMode || !liveChatSessionId) return;
-
-        $.ajax({
-            url: chatbotAjax.ajaxurl,
-            method: 'POST',
-            data: {
-                action: 'livechat_poll',
-                session_id: liveChatSessionId,
-                last_message_id: lastMessageId
-            },
-            success: function (response) {
-                try {
-                    const parsed = typeof response === 'string' ? JSON.parse(response) : response;
-                    if (parsed.success && parsed.data) {
-                        const data = parsed.data;
-
-                        // Handle messages array if returned
-                        if (data.messages && Array.isArray(data.messages)) {
-                            data.messages.forEach(function (msg) {
-                                if (msg.sender_type === 'agent' || msg.sender_type === 'system') {
-                                    appendAgentMessage(msg.message || msg.content || '');
-                                    if (msg.id && msg.id > lastMessageId) {
-                                        lastMessageId = msg.id;
-                                    }
-                                }
-                            });
-                        }
-
-                        // If chat was closed by agent
-                        if (data.status === 'closed') {
-                            appendSystemMessage('The chat has been closed by the agent.');
-                            exitLiveChatMode();
-                        }
-                    }
-                } catch (e) {
-                    // Silently fail polling errors
-                }
-            },
-            error: function () {
-                // Silently fail polling errors
-            }
-        });
     }
 
     // ===== Send via Live Chat =====
