@@ -23,15 +23,6 @@ function chatbot_add_admin_menu()
 
     add_submenu_page(
         'chatbot_settings',
-        __('Live Chat Settings', 'chatbot-plugin'),
-        __('Live Chat', 'chatbot-plugin'),
-        'manage_options',
-        'chatbot_livechat_settings',
-        'chatbot_livechat_settings_page'
-    );
-
-    add_submenu_page(
-        'chatbot_settings',
         __('Web Scraping', 'chatbot-plugin'),
         __('Web Scraping', 'chatbot-plugin'),
         'manage_options',
@@ -50,12 +41,6 @@ function chatbot_html()
 function chatbot_settings_page()
 {
     include plugin_dir_path(__FILE__) . '../templates/chatbot-settings-page.php';
-}
-
-
-function chatbot_livechat_settings_page()
-{
-    include plugin_dir_path(__FILE__) . '../templates/chatbot-livechat-settings-page.php';
 }
 
 

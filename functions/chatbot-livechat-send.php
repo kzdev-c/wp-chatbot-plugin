@@ -10,10 +10,10 @@ $visitor_name  = isset($_POST['visitor_name']) ? sanitize_text_field($_POST['vis
 $visitor_email = isset($_POST['visitor_email']) ? sanitize_email($_POST['visitor_email']) : '';
 
 $token    = get_option('chatbot_token');
-$base_url = get_option('livechat_base_url');
+$base_url = CHATBOT_DASHBOARD_API_BASE_URL . '/api/livechat';
 
-if (empty($token) || empty($base_url)) {
-    echo json_encode(['error' => 'Live chat is not configured. Please set the Live Chat URL and Token in settings.']);
+if (empty($token)) {
+    echo json_encode(['error' => 'Live chat is not configured. Please set the Token in Credentials settings.']);
     wp_die();
 }
 
@@ -26,7 +26,7 @@ $api_url = rtrim($base_url, '/') . '/message';
 
 $post_data = [
     'token'        => $token,
-    'session_id'   => $session_id,
+    'session_id'   => $session_id, // needs to be changble if chat is closed
     'message'      => $message,
     'visitor_name'  => !empty($visitor_name) ? $visitor_name : 'Visitor',
     'visitor_email' => !empty($visitor_email) ? $visitor_email : '',

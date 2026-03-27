@@ -9,9 +9,9 @@ $rating  = intval($_POST['rating']);
 $comment = isset($_POST['comment']) ? sanitize_text_field($_POST['comment']) : '';
 
 $token    = get_option('chatbot_token');
-$base_url = get_option('livechat_base_url');
+$base_url = CHATBOT_DASHBOARD_API_BASE_URL . '/api/livechat';
 
-if (empty($token) || empty($base_url)) {
+if (empty($token)) {
     echo json_encode(['error' => 'Live chat is not configured.']);
     wp_die();
 }

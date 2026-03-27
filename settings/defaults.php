@@ -26,26 +26,6 @@ function chatbot_default_settings()
         update_option('chatbot_name', '');
     }
 
-    // Live Chat defaults
-
-    if (get_option('livechat_base_url') === false) {
-        update_option(
-            'livechat_base_url',
-            'https://chatbot-dashboard.local/api/livechat'
-        );
-    }
-
-    if (get_option('livechat_token') === false) {
-        update_option('livechat_token', '');
-    }
-
-    if (get_option('livechat_enabled') === false) {
-        update_option('livechat_enabled', '0');
-    }
-
-    if (get_option('livechat_poll_interval') === false) {
-        update_option('livechat_poll_interval', '3');
-    }
 }
 
 

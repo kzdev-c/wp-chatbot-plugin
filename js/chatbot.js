@@ -13,11 +13,6 @@ jQuery(document).ready(function ($) {
     let liveChatSessionId = null;
     let liveChatId = null;
     let lastMessageId = 0;
-    let pollTimer = null;
-    const livechatEnabled = (typeof chatbotAjax !== 'undefined' && chatbotAjax.livechat_enabled === '1');
-    const pollInterval = (typeof chatbotAjax !== 'undefined' && chatbotAjax.livechat_poll_interval)
-        ? parseInt(chatbotAjax.livechat_poll_interval) * 1000
-        : 3000;
 
     // Generate a unique session ID for this visitor (persisted via sessionStorage)
     function getSessionId() {
@@ -90,8 +85,8 @@ jQuery(document).ready(function ($) {
         // Show a system message
         appendSystemMessage('You are now connected to a live agent. Please wait for a response.');
 
-        // Start polling for agent messages
-        startPolling();
+        // Start WebSocket listener for agent messages
+        startWebSocket();
     }
 
     function exitLiveChatMode() {
@@ -107,8 +102,8 @@ jQuery(document).ready(function ($) {
         // Re-enable mic/TTS
         enableTTS();
 
-        // Stop polling
-        stopPolling();
+        // Stop WebSocket listener
+        stopWebSocket();
     }
 
     function disableTTS() {
@@ -154,51 +149,63 @@ jQuery(document).ready(function ($) {
         scrollToBottom();
     }
 
-    // ===== WebSockets / Reverb for Live Chat Messages =====
-    function startPolling() {
+    // ===== WebSocket (Pusher/Reverb) for Live Chat Messages =====
+    let pusherInstance = null;
+    let liveChatChannel = null;
+
+    function startWebSocket() {
         if (!liveChatId) return;
 
-        // Initialize Laravel Echo if not already initialized
-        if (!window.Echo) {
-            window.Echo = new window.Echo({
-                broadcaster: 'reverb',
-                key: 'vxndobokdf3gjybrbjuj', // Provided Reverb Key
+        // Initialize Pusher if not already initialized
+        if (!pusherInstance) {
+            pusherInstance = new Pusher('vxndobokdf3gjybrbjuj', {
+                cluster: 'mt1',
                 wsHost: chatbotAjax.livechat_ws_host,
                 wsPort: 8089,
                 wssPort: 8089,
                 forceTLS: false,
                 enabledTransports: ['ws', 'wss'],
             });
+
+            pusherInstance.connection.bind('connected', () => {
+                console.log('[LiveChat] WebSocket connected');
+            });
+
+            pusherInstance.connection.bind('error', (err) => {
+                console.error('[LiveChat] WebSocket error:', err);
+            });
         }
 
         // Subscribe to chat channel
-        window.Echo.channel(`livechat.${liveChatId}`)
-            .listen('ChatMessageSent', (e) => {
-                console.log('[LiveChat DEBUG] Websocket New Message:', e);
-                if (e.sender_type === 'agent' || e.sender_type === 'system') {
-                    if (e.message === '[[CHAT_RESOLVED]]') {
-                        appendSystemMessage('The chat has been closed by the agent.');
-                        exitLiveChatMode();
-                    } else {
-                        // Avoid duplicates if same ID is ever emitted twice
-                        if (!e.id || e.id > lastMessageId) {
-                            appendAgentMessage(e.message || e.content || '');
-                            if (e.id) lastMessageId = e.id;
-                        }
+        liveChatChannel = pusherInstance.subscribe(`livechat.${liveChatId}`);
+
+        liveChatChannel.bind('ChatMessageSent', (e) => {
+            console.log('[LiveChat] New Message:', e);
+            if (e.sender_type === 'agent' || e.sender_type === 'system') {
+                if (e.message === '[[CHAT_RESOLVED]]') {
+                    appendSystemMessage('The chat has been closed by the agent.');
+                    exitLiveChatMode();
+                } else {
+                    // Avoid duplicates if same ID is ever emitted twice
+                    if (!e.id || e.id > lastMessageId) {
+                        appendAgentMessage(e.message || e.content || '');
+                        if (e.id) lastMessageId = e.id;
                     }
                 }
-            })
-            .listen('TypingIndicator', (e) => {
-                if (e.sender_type === 'agent') {
-                    console.log('[LiveChat DEBUG] Agent is typing...');
-                    // Optional: show typing bubbles
-                }
-            });
+            }
+        });
+
+        liveChatChannel.bind('TypingIndicator', (e) => {
+            if (e.sender_type === 'agent') {
+                console.log('[LiveChat] Agent is typing...');
+            }
+        });
     }
 
-    function stopPolling() {
-        if (window.Echo && liveChatId) {
-            window.Echo.leaveChannel(`livechat.${liveChatId}`);
+    function stopWebSocket() {
+        if (pusherInstance && liveChatId) {
+            pusherInstance.unsubscribe(`livechat.${liveChatId}`);
+            liveChatChannel = null;
         }
     }
 
@@ -370,7 +377,7 @@ jQuery(document).ready(function ($) {
                     scrollToBottom();
 
                     // If x-key is true AND live chat is enabled in settings, switch to live chat
-                    if (shouldHandoff && livechatEnabled) {
+                    if (shouldHandoff) {
                         enterLiveChatMode();
                     }
 

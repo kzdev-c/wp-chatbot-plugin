@@ -1,6 +1,7 @@
 <?php
 
-function chatbot_enqueue_scripts($hook) {
+function chatbot_enqueue_scripts($hook)
+{
 
     // Add Pusher and Echo for WebSockets
     wp_enqueue_script(
@@ -12,9 +13,9 @@ function chatbot_enqueue_scripts($hook) {
     );
 
     wp_enqueue_script(
-        'laravel-echo',
-        'https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.min.js',
-        [],
+        'my-reverb-client',
+        plugin_dir_url(__FILE__) . '../js/reverb.js',
+        ['pusher-js'],
         null,
         true
     );
@@ -27,7 +28,7 @@ function chatbot_enqueue_scripts($hook) {
     wp_enqueue_script(
         'chatbot-js',
         plugin_dir_url(__FILE__) . '../js/chatbot.js',
-        ['jquery', 'laravel-echo'],
+        ['jquery', 'my-reverb-client'],
         '1.1',
         true
     );
@@ -59,8 +60,7 @@ function chatbot_enqueue_scripts($hook) {
     if (
         $hook === 'toplevel_page_chatbot_settings' ||
         $hook === 'chatbot_page_chatbot_web_scraping' ||
-        $hook === 'chatbot_page_chatbot_file_upload' ||
-        $hook === 'chatbot_page_chatbot_livechat_settings'
+        $hook === 'chatbot_page_chatbot_file_upload'
     ) {
         wp_enqueue_style(
             'settings-css',
@@ -68,15 +68,10 @@ function chatbot_enqueue_scripts($hook) {
         );
     }
 
-    $base_url = get_option('livechat_base_url', '');
-
-    $ws_host = !empty($base_url)
-        ? parse_url($base_url, PHP_URL_HOST)
-        : 'chatbot-dashboard.local';
+    $ws_host = parse_url(CHATBOT_DASHBOARD_API_BASE_URL, PHP_URL_HOST) ?: 'chatbot-dashboard.local';
 
     wp_localize_script('chatbot-js', 'chatbotAjax', [
         'ajaxurl'          => admin_url('admin-ajax.php'),
-        'livechat_enabled' => get_option('livechat_enabled', '0'),
         'livechat_ws_host' => $ws_host,
     ]);
 
@@ -94,7 +89,8 @@ function chatbot_enqueue_scripts($hook) {
 }
 
 
-function load_font_awesome() {
+function load_font_awesome()
+{
     wp_enqueue_style(
         'font-awesome',
         'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'
@@ -102,7 +98,8 @@ function load_font_awesome() {
 }
 
 
-function load_bootstrap() {
+function load_bootstrap()
+{
     wp_enqueue_style(
         'bootstrap-css',
         'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css'
