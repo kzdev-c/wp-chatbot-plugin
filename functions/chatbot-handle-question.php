@@ -17,9 +17,12 @@ switch ($module) {
     case 'web_scrapper':
         $api_url = CHATBOT_API_BASE_URL . '/web_scraper/ask';
         $post_data = [
-            'question' => $question,
-            'username' => $username,
-            'token'    => $token,
+            'question'   => $question,
+            'username'   => $username,
+            'token'      => $token,
+            'session_id' => isset($_COOKIE['cb_user_session']) ? sanitize_text_field(stripslashes($_COOKIE['cb_user_session'])) : null,
+            'location'   => (isset($_COOKIE['cb_user_location']) && $_COOKIE['cb_user_location'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_location'])) : null,
+            'device'     => (isset($_COOKIE['cb_user_agent']) && $_COOKIE['cb_user_agent'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_agent'])) : null,
         ];
         break;
 
@@ -36,11 +39,14 @@ switch ($module) {
         $visitor_id = session_id();
         $api_url = CHATBOT_API_BASE_URL . '/file_chatbot/ask';
         $post_data = [
-            'username'     => $username,
-            'token'        => $token,
-            'question'     => $question,
-            'file_name' => $file,
+            'username'   => $username,
+            'token'      => $token,
+            'question'   => $question,
+            'file_name'  => $file,
             'visitor_id' => $visitor_id,
+            'session_id' => isset($_COOKIE['cb_user_session']) ? sanitize_text_field(stripslashes($_COOKIE['cb_user_session'])) : null,
+            'location'   => (isset($_COOKIE['cb_user_location']) && $_COOKIE['cb_user_location'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_location'])) : null,
+            'device'     => (isset($_COOKIE['cb_user_agent']) && $_COOKIE['cb_user_agent'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_agent'])) : null,
         ];
         break;
 

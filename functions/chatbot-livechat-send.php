@@ -31,6 +31,8 @@ $post_data = [
     'message'      => $message,
     'visitor_name'  => $session_id . ' - ' . $domain,
     'visitor_email' => !empty($visitor_email) ? $visitor_email : '',
+    'location'     => (isset($_COOKIE['cb_user_location']) && $_COOKIE['cb_user_location'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_location'])) : null,
+    'device'        => (isset($_COOKIE['cb_user_agent']) && $_COOKIE['cb_user_agent'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_agent'])) : null,
 ];
 
 // DEBUG: Log request details

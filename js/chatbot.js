@@ -55,7 +55,80 @@ jQuery(document).ready(function ($) {
         }, 300);
     }
 
+    function setCookie(name, value, days) {
+        var expires = "";
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return null;
+    }
+
+    function initUserTracking() {
+        if (!getCookie('cb_user_agent')) {
+            let deviceStr = navigator.userAgent;
+            if (navigator.userAgentData) {
+                let brands = navigator.userAgentData.brands ? navigator.userAgentData.brands.map(b => b.brand).join(', ') : '';
+                let platform = navigator.userAgentData.platform || '';
+                if (brands || platform) {
+                    deviceStr = (platform ? platform + " - " : "") + brands;
+                }
+            }
+            setCookie('cb_user_agent', deviceStr || 'not provided', 365);
+        }
+
+        if (!getCookie('cb_user_session')) {
+            setCookie('cb_user_session', getSessionId(), 365);
+        }
+
+        if (!getCookie('cb_user_location')) {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    const fallbackLoc = lat + "," + lon;
+                    
+                    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.city) {
+                                let locName = data.city;
+                                if (data.countryName) locName += ", " + data.countryName;
+                                setCookie('cb_user_location', locName, 365);
+                            } else if (data && data.locality) {
+                                let locName = data.locality;
+                                if (data.countryName) locName += ", " + data.countryName;
+                                setCookie('cb_user_location', locName, 365);
+                            } else {
+                                setCookie('cb_user_location', fallbackLoc, 365);
+                            }
+                        })
+                        .catch(() => {
+                            setCookie('cb_user_location', fallbackLoc, 365);
+                        });
+                }, function(error) {
+                    setCookie('cb_user_location', 'not provided', 365);
+                });
+            } else {
+                setCookie('cb_user_location', 'not provided', 365);
+            }
+        }
+    }
+
     toggleButton.on('click', function () {
+        initUserTracking();
         if (chatbot.hasClass('collapsed')) {
             showChatbot();
         } else {
