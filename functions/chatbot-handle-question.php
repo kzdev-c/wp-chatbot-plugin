@@ -5,6 +5,7 @@ $username = get_option('chatbot_username');
 $token    = get_option('chatbot_token');
 $module   = get_option('preferred_module');
 $file   = get_option('file_name');
+$use_mock = false; 
 
 if (empty($username) || empty($token) || empty($question) || empty($module)) {
     echo json_encode(['error' => 'Invalid configration settings.']);
@@ -48,6 +49,18 @@ switch ($module) {
         wp_die();
 }
 
+if ($use_mock) {
+    echo json_encode([
+        "response" => [
+            "prompt_message" => "Would you like to share your contact information so we can reach out to you with more information?",
+            "response" => "This is a mock response (no API call made).",
+            "visitor_id" => session_id() ?: "dev-visitor",
+            "visitor_prompt" => true
+        ]
+    ]);
+
+    wp_die();
+}
 // Initialize cURL
 $curl = curl_init();
 
