@@ -10,6 +10,11 @@ function chatbot_livechat_typing()
     include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-typing.php';
 }
 
+function chatbot_livechat_not_typing()
+{
+    include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-not-typing.php';
+}
+
 function chatbot_livechat_close()
 {
     include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-close.php';
@@ -30,6 +35,9 @@ add_action('wp_ajax_nopriv_livechat_send_message', 'chatbot_livechat_send');
 
 add_action('wp_ajax_livechat_typing', 'chatbot_livechat_typing');
 add_action('wp_ajax_nopriv_livechat_typing', 'chatbot_livechat_typing');
+
+add_action('wp_ajax_livechat_not_typing', 'chatbot_livechat_not_typing');
+add_action('wp_ajax_nopriv_livechat_not_typing', 'chatbot_livechat_not_typing');
 
 add_action('wp_ajax_livechat_close', 'chatbot_livechat_close');
 add_action('wp_ajax_nopriv_livechat_close', 'chatbot_livechat_close');

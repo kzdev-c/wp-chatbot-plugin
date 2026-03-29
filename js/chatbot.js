@@ -15,6 +15,9 @@ jQuery(document).ready(function ($) {
     let liveChatSessionId = null;
     let liveChatId = null;
     let lastMessageId = 0;
+    
+    let typingThrottleTime = 0;
+    let notTypingTimeout = null;
 
     // Generate a unique session ID for this visitor (persisted via sessionStorage)
     function getSessionId() {
@@ -62,10 +65,6 @@ jQuery(document).ready(function ($) {
 
     closeButton.on('click', function () {
         hideChatbot();
-        // If in live chat mode, optionally close the chat
-        if (isLiveChatMode && liveChatId) {
-            closeLiveChat();
-        }
     });
 
     inputField.on('click', function (event) {
@@ -184,6 +183,8 @@ jQuery(document).ready(function ($) {
 
         liveChatChannel.bind('chat-message-sent', (e) => {
             console.log('[LiveChat] New Message:', e);
+            hideAgentTyping();
+            
             if (e.sender_type === 'agent' || e.sender_type === 'system') {
                 if (e.message === '[[CHAT_RESOLVED]]') {
                     appendSystemMessage('The chat has been closed by the agent.');
@@ -200,8 +201,56 @@ jQuery(document).ready(function ($) {
         liveChatChannel.bind('typing-indicator', (e) => {
             if (e.sender_type === 'agent') {
                 console.log('[LiveChat] Agent is typing...');
+                showAgentTyping();
             }
         });
+        
+        liveChatChannel.bind('not-typing-indicator', (e) => {
+            if (e.sender_type === 'agent') {
+                console.log('[LiveChat] Agent stopped typing.');
+                hideAgentTyping();
+            }
+        });
+    }
+
+    let agentTypingTimeout = null;
+    function showAgentTyping() {
+        let indicator = $('#agent-typing-indicator');
+        if (indicator.length === 0) {
+            messagesContainer.append(`
+                <div class="chatbot-message bot-message agent-message" id="agent-typing-indicator">
+                    <div class="message-header">Agent</div>
+                    <div class="message-content typing-indicator-container">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `);
+            scrollToBottom();
+        } else {
+            if (!indicator.is(':visible')) {
+                messagesContainer.append(indicator); // Move to bottom since it was hidden
+                indicator.show();
+                scrollToBottom();
+            } else {
+                // If already visible but not the last child, push it down
+                if (messagesContainer.children().last()[0] !== indicator[0]) {
+                    messagesContainer.append(indicator);
+                    scrollToBottom();
+                }
+            }
+        }
+        
+        if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
+        agentTypingTimeout = setTimeout(() => {
+            hideAgentTyping();
+        }, 3000); // Hide automatically after 3 seconds if no new typing event
+    }
+    
+    function hideAgentTyping() {
+        $('#agent-typing-indicator').hide();
+        if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
     }
 
     function stopWebSocket() {
@@ -223,15 +272,17 @@ jQuery(document).ready(function ($) {
         inputField.val('');
         scrollToBottom();
 
-        // Send typing indicator first
+        // Send not-typing indicator (stops typing when message is sent)
+        if (notTypingTimeout) clearTimeout(notTypingTimeout);
         $.ajax({
             url: chatbotAjax.ajaxurl,
             method: 'POST',
             data: {
-                action: 'livechat_typing',
+                action: 'livechat_not_typing',
                 session_id: liveChatSessionId
             }
         });
+        typingThrottleTime = 0;
 
         // Send the actual message
         $.ajax({
@@ -478,22 +529,51 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    // ===== Typing indicator for live chat (debounced) =====
-    let typingTimeout = null;
+    // ===== Typing indicator for live chat (throttle + debounce) =====
     inputField.on('input', function () {
-        if (isLiveChatMode && liveChatSessionId) {
-            if (typingTimeout) clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(function () {
-                $.ajax({
-                    url: chatbotAjax.ajaxurl,
-                    method: 'POST',
-                    data: {
-                        action: 'livechat_typing',
-                        session_id: liveChatSessionId
-                    }
-                });
-            }, 500);
+        if (!isLiveChatMode || !liveChatSessionId) return;
+        
+        // If they cleared the field, immediately stop typing indicator
+        if ($(this).val().trim() === '') {
+            if (notTypingTimeout) clearTimeout(notTypingTimeout);
+            $.ajax({
+                url: chatbotAjax.ajaxurl,
+                method: 'POST',
+                data: { action: 'livechat_not_typing', session_id: liveChatSessionId }
+            });
+            typingThrottleTime = 0;
+            return;
         }
+
+        const now = Date.now();
+        
+        // 1. Send /typing, throttled to exactly once per 2000ms
+        if (now - typingThrottleTime >= 2000) {
+            typingThrottleTime = now;
+            $.ajax({
+                url: chatbotAjax.ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'livechat_typing',
+                    session_id: liveChatSessionId
+                }
+            });
+        }
+        
+        // 2. Debounce /not-typing for 2.5 seconds of TOTAL inactivity
+        if (notTypingTimeout) clearTimeout(notTypingTimeout);
+        
+        notTypingTimeout = setTimeout(function () {
+            $.ajax({
+                url: chatbotAjax.ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'livechat_not_typing',
+                    session_id: liveChatSessionId
+                }
+            });
+            typingThrottleTime = 0; // Reset throttle for next input
+        }, 2500);
     });
 
     // ===== Speech Recognition / TTS =====
