@@ -71,7 +71,7 @@ jQuery(document).ready(function ($) {
     });
 
     // ===== Live Chat Mode UI Updates =====
-    function enterLiveChatMode() {
+    function enterLiveChatMode(silent) {
         isLiveChatMode = true;
         liveChatSessionId = getSessionId();
 
@@ -82,8 +82,10 @@ jQuery(document).ready(function ($) {
         // Disable mic/TTS completely
         disableTTS();
 
-        // Show a system message
-        appendSystemMessage('You are now connected to a live agent. Please wait for a response.');
+        // Show a system message (only if not resuming from history)
+        if (!silent) {
+            appendSystemMessage('You are now connected to a live agent. Please wait for a response.');
+        }
 
         // Start WebSocket listener for agent messages
         startWebSocket();
@@ -541,5 +543,85 @@ jQuery(document).ready(function ($) {
         $("#codeness-chatbot").toggleClass("fullscreen");
         $("#codeness-chatbot").toggleClass("resizable");
     });
+
+    // ===== Load existing messages on init =====
+    function loadExistingMessages() {
+        const sessionId = getSessionId();
+
+        $.ajax({
+            url: chatbotAjax.ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'livechat_get_messages',
+                session_id: sessionId
+            },
+            success: function (response) {
+                try {
+                    const parsed = typeof response === 'string' ? JSON.parse(response) : response;
+
+                    if (parsed.error) {
+                        // "Chat not found" or other error — no existing session, stay in AI mode
+                        console.log('[LiveChat] No existing chat found:', parsed.error);
+                        return;
+                    }
+
+                    if (parsed.success && parsed.messages && parsed.messages.length > 0) {
+                        console.log('[LiveChat] Loading', parsed.messages.length, 'existing messages');
+
+                        let chatResolved = false;
+
+                        parsed.messages.forEach(function (msg) {
+                            // Track the last message ID for dedup
+                            if (msg.id && msg.id > lastMessageId) {
+                                lastMessageId = msg.id;
+                            }
+
+                            // Store chat ID from the first message
+                            if (msg.live_chat_id && !liveChatId) {
+                                liveChatId = msg.live_chat_id;
+                            }
+
+                            if (msg.sender_type === 'visitor') {
+                                messagesContainer.append(`
+                                    <div class="chatbot-message user-message">
+                                        <div class="message-header">You</div>
+                                        <div class="message-content">${msg.message}</div>
+                                    </div>
+                                `);
+                            } else if (msg.sender_type === 'agent') {
+                                appendAgentMessage(msg.message);
+                            } else if (msg.sender_type === 'system') {
+                                if (msg.message === '[[CHAT_RESOLVED]]') {
+                                    chatResolved = true;
+                                } else {
+                                    appendSystemMessage(msg.message);
+                                }
+                            }
+                        });
+
+                        scrollToBottom();
+
+                        // If the last system message was CHAT_RESOLVED, don't enter live chat
+                        if (chatResolved) {
+                            appendSystemMessage('Your previous chat was resolved.');
+                            console.log('[LiveChat] Chat was resolved, staying in AI mode');
+                            return;
+                        }
+
+                        // Enter live chat mode silently (no "connected" message)
+                        enterLiveChatMode(true);
+                    }
+                } catch (e) {
+                    console.error('[LiveChat] Error parsing get-messages response:', e);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('[LiveChat] Error loading messages:', status, error);
+            }
+        });
+    }
+
+    // Check for existing messages when the page loads
+    loadExistingMessages();
 
 });
