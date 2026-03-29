@@ -7,6 +7,8 @@ jQuery(document).ready(function ($) {
     const messagesContainer = $('#codeness-chatbot-messages');
     const modal = $('#form-modal');
     const closeModalButton = $('#close-modal');
+    const endChatButton = $('#codeness-chatbot-end-chat');
+    const closeChatDialog = $('#close-chat-dialog');
 
     // ===== Live Chat State =====
     let isLiveChatMode = false;
@@ -287,10 +289,35 @@ jQuery(document).ready(function ($) {
                 chat_id: liveChatId
             },
             success: function () {
+                appendSystemMessage('Chat has been closed.');
                 exitLiveChatMode();
+            },
+            error: function () {
+                appendSystemMessage('Failed to close chat. Please try again.');
             }
         });
     }
+
+    // ===== End Chat Button + Confirmation Dialog =====
+    endChatButton.on('click', function () {
+        closeChatDialog.addClass('show');
+    });
+
+    $('#close-chat-cancel').on('click', function () {
+        closeChatDialog.removeClass('show');
+    });
+
+    $('#close-chat-confirm').on('click', function () {
+        closeChatDialog.removeClass('show');
+        closeLiveChat();
+    });
+
+    // Close dialog when clicking overlay background
+    closeChatDialog.on('click', function (e) {
+        if ($(e.target).hasClass('chat-dialog-overlay')) {
+            closeChatDialog.removeClass('show');
+        }
+    });
 
     // ===== Main Send Message (AI or Live Chat) =====
     function sendMessage() {

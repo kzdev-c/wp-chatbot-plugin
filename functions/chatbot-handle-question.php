@@ -5,7 +5,7 @@ $username = get_option('chatbot_username');
 $token    = get_option('chatbot_token');
 $module   = get_option('preferred_module');
 $file   = get_option('file_name');
-$use_mock = false; 
+$use_mock = true; 
 
 if (empty($username) || empty($token) || empty($question) || empty($module)) {
     echo json_encode(['error' => 'Invalid configration settings.']);

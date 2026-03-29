@@ -26,6 +26,9 @@
         <button id="codeness-chatbot-send" title="Send message">
             <i class="fas fa-paper-plane"></i>
         </button>
+        <button id="codeness-chatbot-end-chat" title="End chat">
+            <i class="fas fa-times-circle"></i>
+        </button>
     </div>
 </div>
 
@@ -54,5 +57,20 @@
             <button id="submit-visitor-info" type="submit">Send Message</button>
         </form>
         <div id="info-response"></div>
+    </div>
+</div>
+
+<!-- Close Chat Confirmation Dialog -->
+<div id="close-chat-dialog" class="chat-dialog-overlay">
+    <div class="chat-dialog-box">
+        <div class="chat-dialog-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="chat-dialog-title">End Live Chat?</h3>
+        <p class="chat-dialog-text">Are you sure you want to close this conversation? This action cannot be undone.</p>
+        <div class="chat-dialog-actions">
+            <button id="close-chat-cancel" class="chat-dialog-btn chat-dialog-btn-cancel">Cancel</button>
+            <button id="close-chat-confirm" class="chat-dialog-btn chat-dialog-btn-confirm">End Chat</button>
+        </div>
     </div>
 </div>

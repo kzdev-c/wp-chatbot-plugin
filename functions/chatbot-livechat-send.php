@@ -26,7 +26,7 @@ $api_url = rtrim($base_url, '/') . '/message';
 
 $post_data = [
     'token'        => $token,
-    'session_id'   => 'visitor_1774635220421_3moin56sotest00',//$session_id, // needs to be changble if chat is closed
+    'session_id'   => $session_id, 
     'message'      => $message,
     'visitor_name'  => !empty($visitor_name) ? $visitor_name : 'Visitor',
     'visitor_email' => !empty($visitor_email) ? $visitor_email : '',

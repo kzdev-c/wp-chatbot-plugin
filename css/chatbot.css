@@ -669,3 +669,161 @@
   pointer-events: none;
   filter: grayscale(1);
 }
+
+/* ===== End Chat Button ===== */
+#codeness-chatbot-end-chat {
+  all: initial;
+  font-family: var(--chat-font);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+#codeness-chatbot-end-chat i {
+  font-size: 15px;
+  color: #dc2626;
+}
+
+#codeness-chatbot-end-chat:hover {
+  background: #fee2e2;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+#codeness-chatbot.livechat-active #codeness-chatbot-end-chat {
+  display: flex;
+}
+
+/* ===== Close Chat Confirmation Dialog ===== */
+.chat-dialog-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 15, 30, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999999;
+  justify-content: center;
+  align-items: center;
+}
+
+.chat-dialog-overlay.show {
+  display: flex;
+  animation: dialogOverlayIn 0.25s ease forwards;
+}
+
+@keyframes dialogOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.chat-dialog-box {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.04);
+  text-align: center;
+  animation: dialogBoxIn 0.35s var(--chat-transition) forwards;
+}
+
+@keyframes dialogBoxIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chat-dialog-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.25);
+}
+
+.chat-dialog-icon i {
+  font-size: 22px;
+  color: #d97706;
+}
+
+.chat-dialog-title {
+  font-family: var(--chat-font);
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1d26;
+  margin: 0 0 8px 0;
+}
+
+.chat-dialog-text {
+  font-family: var(--chat-font);
+  font-size: 13.5px;
+  color: #6b7280;
+  line-height: 1.55;
+  margin: 0 0 24px 0;
+}
+
+.chat-dialog-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.chat-dialog-btn {
+  font-family: var(--chat-font);
+  padding: 10px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+
+.chat-dialog-btn-cancel {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.chat-dialog-btn-cancel:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.chat-dialog-btn-confirm {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+}
+
+.chat-dialog-btn-confirm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+.chat-dialog-btn-confirm:active,
+.chat-dialog-btn-cancel:active {
+  transform: translateY(0);
+}

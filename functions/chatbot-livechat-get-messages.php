@@ -4,7 +4,7 @@
  * Called via AJAX action 'livechat_get_messages'.
  */
 
-$session_id = 'visitor_1774635220421_3moin56sotest00';//sanitize_text_field($_POST['session_id']);
+$session_id = sanitize_text_field($_POST['session_id']);
 $token      = get_option('chatbot_token');
 $base_url   = CHATBOT_DASHBOARD_API_BASE_URL . '/api/livechat';
 
