@@ -24,11 +24,12 @@ if (empty($message) || empty($session_id)) {
 
 $api_url = rtrim($base_url, '/') . '/message';
 
+$domain = wp_parse_url(home_url(), PHP_URL_HOST);
 $post_data = [
     'token'        => $token,
     'session_id'   => $session_id, 
     'message'      => $message,
-    'visitor_name'  => !empty($visitor_name) ? $visitor_name : 'Visitor',
+    'visitor_name'  => $session_id . ' - ' . $domain,
     'visitor_email' => !empty($visitor_email) ? $visitor_email : '',
 ];
 

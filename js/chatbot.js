@@ -165,10 +165,10 @@ jQuery(document).ready(function ($) {
             pusherInstance = new Pusher('vxndobokdf3gjybrbjuj', {
                 cluster: 'mt1',
                 wsHost: chatbotAjax.livechat_ws_host,
-                wsPort: 8089,
-                wssPort: 8089,
-                forceTLS: false,
-                enabledTransports: ['ws', 'wss'],
+                wsPort: 443,
+                wssPort: 443,
+                forceTLS: true,
+                enabledTransports: ["ws", "wss"],
             });
 
             pusherInstance.connection.bind('connected', () => {
@@ -179,18 +179,16 @@ jQuery(document).ready(function ($) {
                 console.error('[LiveChat] WebSocket error:', err);
             });
         }
-
         // Subscribe to chat channel
         liveChatChannel = pusherInstance.subscribe(`livechat.${liveChatId}`);
 
-        liveChatChannel.bind('ChatMessageSent', (e) => {
+        liveChatChannel.bind('chat-message-sent', (e) => {
             console.log('[LiveChat] New Message:', e);
             if (e.sender_type === 'agent' || e.sender_type === 'system') {
                 if (e.message === '[[CHAT_RESOLVED]]') {
                     appendSystemMessage('The chat has been closed by the agent.');
                     exitLiveChatMode();
                 } else {
-                    // Avoid duplicates if same ID is ever emitted twice
                     if (!e.id || e.id > lastMessageId) {
                         appendAgentMessage(e.message || e.content || '');
                         if (e.id) lastMessageId = e.id;
@@ -199,7 +197,7 @@ jQuery(document).ready(function ($) {
             }
         });
 
-        liveChatChannel.bind('TypingIndicator', (e) => {
+        liveChatChannel.bind('typing-indicator', (e) => {
             if (e.sender_type === 'agent') {
                 console.log('[LiveChat] Agent is typing...');
             }
@@ -510,7 +508,7 @@ jQuery(document).ready(function ($) {
     } else {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         recognition = new SpeechRecognition();
-        recognition.continuous = true; 
+        recognition.continuous = true;
         recognition.interimResults = false;
         recognition.lang = langSelect.val() || 'en-US';
 
