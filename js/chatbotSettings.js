@@ -75,6 +75,7 @@ jQuery(document).ready(function ($) {
         // Get the selected value
         var selectedModule = $('#preferred-module').val();
         var chatbot_name = $('#chatbot_name').val();
+        var ai_chat_enabled = $('#ai_chat_enabled').is(':checked') ? '1' : '0';
 
         // Send AJAX request
         $.ajax({
@@ -83,7 +84,8 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'chatbot_settings',
                 preferred_module: selectedModule,
-                chatbot_name: chatbot_name
+                chatbot_name: chatbot_name,
+                ai_chat_enabled: ai_chat_enabled
             },
             success: function (response) {
                 $('#module-response').html('<div class=" alert-success">' + response + '</div>');

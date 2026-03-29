@@ -15,7 +15,7 @@ jQuery(document).ready(function ($) {
     let liveChatSessionId = null;
     let liveChatId = null;
     let lastMessageId = 0;
-    
+
     let typingThrottleTime = 0;
     let notTypingTimeout = null;
 
@@ -62,16 +62,16 @@ jQuery(document).ready(function ($) {
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
             expires = "; expires=" + date.toUTCString();
         }
-        document.cookie = name + "=" + (value || "")  + expires + "; path=/";
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
     }
 
     function getCookie(name) {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
-        for(var i=0;i < ca.length;i++) {
+        for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0)==' ') c = c.substring(1,c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
         }
         return null;
     }
@@ -95,11 +95,11 @@ jQuery(document).ready(function ($) {
 
         if (!getCookie('cb_user_location')) {
             if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(function(position) {
+                navigator.geolocation.getCurrentPosition(function (position) {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     const fallbackLoc = lat + "," + lon;
-                    
+
                     fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
                         .then(response => response.json())
                         .then(data => {
@@ -118,7 +118,7 @@ jQuery(document).ready(function ($) {
                         .catch(() => {
                             setCookie('cb_user_location', fallbackLoc, 365);
                         });
-                }, function(error) {
+                }, function (error) {
                     setCookie('cb_user_location', 'not provided', 365);
                 });
             } else {
@@ -158,7 +158,7 @@ jQuery(document).ready(function ($) {
 
         // Show a system message (only if not resuming from history)
         if (!silent) {
-            appendSystemMessage('You are now connected to a live agent. Please wait for a response.');
+            appendSystemMessage("You're now chatting with a live agent. Let us know how we can help!");
         }
 
         // Start WebSocket listener for agent messages
@@ -257,7 +257,7 @@ jQuery(document).ready(function ($) {
         liveChatChannel.bind('chat-message-sent', (e) => {
             console.log('[LiveChat] New Message:', e);
             hideAgentTyping();
-            
+
             if (e.sender_type === 'agent' || e.sender_type === 'system') {
                 if (e.message === '[[CHAT_RESOLVED]]') {
                     appendSystemMessage('The chat has been closed by the agent.');
@@ -277,7 +277,7 @@ jQuery(document).ready(function ($) {
                 showAgentTyping();
             }
         });
-        
+
         liveChatChannel.bind('not-typing-indicator', (e) => {
             if (e.sender_type === 'agent') {
                 console.log('[LiveChat] Agent stopped typing.');
@@ -314,13 +314,13 @@ jQuery(document).ready(function ($) {
                 }
             }
         }
-        
+
         if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
         agentTypingTimeout = setTimeout(() => {
             hideAgentTyping();
         }, 3000); // Hide automatically after 3 seconds if no new typing event
     }
-    
+
     function hideAgentTyping() {
         $('#agent-typing-indicator').hide();
         if (agentTypingTimeout) clearTimeout(agentTypingTimeout);
@@ -496,14 +496,13 @@ jQuery(document).ready(function ($) {
                     const messageText = parsedResponse.response.response;
                     const prompt_message = parsedResponse.response.prompt_message;
 
-                    // ===== Check for x-key handoff =====
-                    const xKey = parsedResponse.response['x-key'];
-                    // const shouldHandoff = (xKey === true || xKey === 'true');
-                    const shouldHandoff = true;
+                    // ===== Check for enter_live_chat handoff =====
+                    const livechat = parsedResponse?.response?.livechat;
+                    const shouldHandoff = String(livechat).toLowerCase() === 'true';
 
                     $('#codeness-chatbot-loading').remove();
 
-                    if (prompt_message) {
+                    if (prompt_message && !shouldHandoff) {
                         $('#codeness-chatbot-messages').append(`
                             <div class="chatbot-message bot-message prompt-message">
                                 <div class="message-header">Prompt</div>
@@ -517,7 +516,7 @@ jQuery(document).ready(function ($) {
                                 </div>
                             </div>
                         `);
-                    } else {
+                    } else if(!shouldHandoff) {
                         $('#codeness-chatbot-messages').append(`
                         <div class="chatbot-message bot-message">
                             <div class="message-header">Bot</div>
@@ -527,7 +526,7 @@ jQuery(document).ready(function ($) {
                     }
                     scrollToBottom();
 
-                    // If x-key is true AND live chat is enabled in settings, switch to live chat
+                    // If live chat is true AND live chat is enabled in settings, switch to live chat
                     if (shouldHandoff) {
                         enterLiveChatMode();
                     }
@@ -605,7 +604,7 @@ jQuery(document).ready(function ($) {
     // ===== Typing indicator for live chat (throttle + debounce) =====
     inputField.on('input', function () {
         if (!isLiveChatMode || !liveChatSessionId) return;
-        
+
         // If they cleared the field, immediately stop typing indicator
         if ($(this).val().trim() === '') {
             if (notTypingTimeout) clearTimeout(notTypingTimeout);
@@ -619,7 +618,7 @@ jQuery(document).ready(function ($) {
         }
 
         const now = Date.now();
-        
+
         // 1. Send /typing, throttled to exactly once per 2000ms
         if (now - typingThrottleTime >= 2000) {
             typingThrottleTime = now;
@@ -632,10 +631,10 @@ jQuery(document).ready(function ($) {
                 }
             });
         }
-        
+
         // 2. Debounce /not-typing for 2.5 seconds of TOTAL inactivity
         if (notTypingTimeout) clearTimeout(notTypingTimeout);
-        
+
         notTypingTimeout = setTimeout(function () {
             $.ajax({
                 url: chatbotAjax.ajaxurl,

@@ -17,7 +17,26 @@
             <label for="chatbot_name">Chatbot Name:</label>
             <input type="text" id="chatbot_name" name="chatbot_name" value="<?php echo esc_attr(get_option('chatbot_name')); ?>">
         </div>
-        <button type="submit" class="btn btn-primary">Save</button>
+        <div class="form-group" style="margin-top: 20px; padding: 15px; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
+            <div style="display: flex; align-items: center;">
+                <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-right: 12px; margin-bottom: 0;">
+                    <input type="checkbox" id="ai_chat_enabled" name="ai_chat_enabled" value="1" <?php checked('1', get_option('ai_chat_enabled')); ?> style="opacity: 0; width: 0; height: 0; position: absolute;">
+                    <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 24px;"></span>
+                    <style>
+                        .switch .slider { background-color: #ccc; }
+                        .switch input:checked + .slider { background-color: #4CAF50 !important; }
+                        .switch input:focus + .slider { box-shadow: 0 0 1px #4CAF50; }
+                        .switch .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+                        .switch input:checked + .slider:before { transform: translateX(20px); }
+                    </style>
+                </label>
+                <label for="ai_chat_enabled" style="margin-bottom: 0; font-weight: 600; font-size: 14px; cursor: pointer; color: #1d2327;">Enable Live Chat Only</label>
+            </div>
+            <div style="margin-top: 6px; margin-left: 56px;">
+                <span style="font-size: 13px; color: #646970; display: block; line-height: 1.5;">When disabled, the AI automatically handles conversations and smoothly escalates to live chat only when necessary.</span>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save</button>
     </form>
 
     <hr>

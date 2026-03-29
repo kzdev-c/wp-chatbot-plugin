@@ -5,7 +5,7 @@ $username = get_option('chatbot_username');
 $token    = get_option('chatbot_token');
 $module   = get_option('preferred_module');
 $file   = get_option('file_name');
-$use_mock = true; 
+$is_live_mode = get_option('ai_chat_enabled') == '1'; 
 
 if (empty($username) || empty($token) || empty($question) || empty($module)) {
     echo json_encode(['error' => 'Invalid configration settings.']);
@@ -55,13 +55,15 @@ switch ($module) {
         wp_die();
 }
 
-if ($use_mock) {
+if (!$is_live_mode) {
     echo json_encode([
         "response" => [
-            "prompt_message" => "Would you like to share your contact information so we can reach out to you with more information?",
-            "response" => "This is a mock response (no API call made).",
-            "visitor_id" => session_id() ?: "dev-visitor",
-            "visitor_prompt" => true
+            "prompt_message" => "Live chat is currently enabled. Would you like to share your contact details so our team can assist you directly?",
+            "response" => "You’re currently connected to live support. Our team will assist you shortly.",
+            "visitor_id" => session_id() ?: "visitor",
+            "visitor_prompt" => true,
+            "enter_live_chat" => true,
+            "livechat" => true
         ]
     ]);
 
