@@ -21,7 +21,10 @@ jQuery(document).ready(function ($) {
 
     // Generate a unique session ID for this visitor (persisted via sessionStorage)
     function getSessionId() {
-        let sid = sessionStorage.getItem('chatbot_livechat_session_id');
+        let sid = getCookie('cb_user_session');
+        if (sid) return sid;
+
+        sid = sessionStorage.getItem('chatbot_livechat_session_id');
         if (!sid) {
             sid = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             sessionStorage.setItem('chatbot_livechat_session_id', sid);

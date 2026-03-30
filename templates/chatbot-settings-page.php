@@ -48,10 +48,10 @@
                             .switch input:checked + .slider:before { transform: translateX(20px); }
                         </style>
                     </label>
-                    <label for="ai_chat_enabled" style="margin-bottom: 0; font-weight: 600; font-size: 14px; cursor: pointer; color: #1d2327;">Enable Live Chat Only</label>
+                    <label for="ai_chat_enabled" style="margin-bottom: 0; font-weight: 600; font-size: 14px; cursor: pointer; color: #1d2327;">Enable AI Chat along with Live Chat</label>
                 </div>
                 <div style="margin-top: 6px; margin-left: 56px;">
-                    <span style="font-size: 13px; color: #646970; display: block; line-height: 1.5;">When disabled, the AI automatically handles conversations and smoothly escalates to live chat only when necessary.</span>
+                    <span style="font-size: 13px; color: #646970; display: block; line-height: 1.5;">When enabled, the AI automatically handles conversations and smoothly escalates to live chat only when necessary.</span>
                 </div>
             </div>
         </div>
