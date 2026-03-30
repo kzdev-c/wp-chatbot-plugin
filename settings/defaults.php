@@ -33,6 +33,10 @@ function chatbot_default_settings()
     if (get_option('livechat_secret_key') === false) {
         update_option('livechat_secret_key', '');
     }
+
+    if (get_option('chatbot_dashboard_url') === false) {
+        update_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local');
+    }
 }
 
 

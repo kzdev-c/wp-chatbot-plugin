@@ -35,6 +35,11 @@ function chatbot_submit_visitor_info()
     include plugin_dir_path(__FILE__) . '../functions/chatbot-submit-visitor-info.php';
 }
 
+function chatbot_livechat_settings_save()
+{
+    include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-settings.php';
+}
+
 
 
 add_action('wp_ajax_ask_question', 'chatbot_handle_question');
@@ -52,3 +57,5 @@ add_action('wp_ajax_chatbot_check_files', 'chatbot_check_files');
 
 add_action('wp_ajax_submit_visitor_info', 'chatbot_submit_visitor_info');
 add_action('wp_ajax_nopriv_submit_visitor_info', 'chatbot_submit_visitor_info');
+
+add_action('wp_ajax_chatbot_livechat_settings_save', 'chatbot_livechat_settings_save');

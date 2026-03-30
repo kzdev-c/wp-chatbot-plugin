@@ -2,7 +2,6 @@
 
 $username           = sanitize_text_field($_POST['username']);
 $token              = sanitize_text_field($_POST['token']);
-$livechat_secret_key = isset($_POST['livechat_secret_key']) ? sanitize_text_field($_POST['livechat_secret_key']) : '';
 
 $curl = curl_init();
 
@@ -35,7 +34,6 @@ if ($response_data && isset($response_data['valid'])) {
         echo '<div class="notice notice-success is-dismissible"><p>Credentials are correct and settings saved.</p></div>';
         update_option('chatbot_username', $username);
         update_option('chatbot_token', $token);
-        update_option('livechat_secret_key', $livechat_secret_key);
     } elseif ($response_data['valid'] == 0) {
         echo '<div class="notice notice-error is-dismissible"><p>Invalid credentials. Please check your username and token.</p></div>';
     }
