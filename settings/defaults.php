@@ -36,7 +36,10 @@ function chatbot_default_settings()
 
     if (get_option('chatbot_dashboard_url') === false) {
         update_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local');
+        if (get_option('has_livechat') === false) {
+        update_option('has_livechat', '0');
     }
+}
 }
 
 

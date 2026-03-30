@@ -386,7 +386,13 @@ jQuery(document).ready(function ($) {
                     if (parsed.success && parsed.data) {
                         // Store chat_id if returned
                         if (parsed.data.chat_id) {
+                            let isNewChatId = !liveChatId;
                             liveChatId = parsed.data.chat_id;
+                            
+                            // Initialize WebSocket if this is the first time we've received the chat_id
+                            if (isNewChatId) {
+                                startWebSocket();
+                            }
                         }
                         if (parsed.data.message_id && parsed.data.message_id > lastMessageId) {
                             lastMessageId = parsed.data.message_id;
@@ -465,28 +471,34 @@ jQuery(document).ready(function ($) {
         messagesContainer.append(`
             <div class="chatbot-message system-message chat-rating-container" id="chat-rating-box">
                 <div class="chat-rating-title">How was your chat experience?</div>
-                <div class="chat-rating-stars-js" id="chat-rating-stars">
-                    <i class="far fa-star" data-index="1"></i>
-                    <i class="far fa-star" data-index="2"></i>
-                    <i class="far fa-star" data-index="3"></i>
-                    <i class="far fa-star" data-index="4"></i>
-                    <i class="far fa-star" data-index="5"></i>
+                <div class="chat-rating-stars-js" id="chat-rating-stars" style="display:flex; justify-content:center; gap:4px; margin-top:8px; position:relative;">
+                    <svg width="0" height="0" style="position:absolute;">
+                        <defs>
+                            <linearGradient id="star-half-fill" x1="0" y1="0" x2="1" y2="0">
+                                <stop offset="50%" stop-color="#fbbf24" />
+                                <stop offset="50%" stop-color="#e5e7eb" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <svg class="chat-star" data-index="1" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg class="chat-star" data-index="2" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg class="chat-star" data-index="3" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg class="chat-star" data-index="4" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                    <svg class="chat-star" data-index="5" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                 </div>
-                <div class="chat-rating-value" style="font-size: 13px; color: #6b7280; margin-top: 8px; font-weight: 500;">0 / 5</div>
+                <div class="chat-rating-value" style="font-size: 13px; color: #6b7280; margin-top: 8px; font-weight: 500;">0.0 / 5.0</div>
                 <button class="chat-rating-submit" id="chat-rating-submit" data-chat="${chatId}" disabled>Submit Rating</button>
             </div>
         `);
         scrollToBottom();
     }
 
-    $(document).on('mousemove', '#chat-rating-stars i', function(e) {
+    $(document).on('mousemove', '#chat-rating-stars .chat-star', function(e) {
         if (isRated) return;
-        let rect = e.target.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let isHalf = x < rect.width / 2;
         let index = parseInt($(this).attr('data-index'));
-        let hoverRating = isHalf ? index - 0.5 : index;
-        updateStars(hoverRating);
+        let rect = this.getBoundingClientRect();
+        let starRating = (e.clientX - rect.left) < (rect.width / 2) ? index - 0.5 : index;
+        updateStars(starRating);
     });
 
     $(document).on('mouseleave', '#chat-rating-stars', function() {
@@ -494,28 +506,35 @@ jQuery(document).ready(function ($) {
         updateStars(currentRating);
     });
 
-    $(document).on('click', '#chat-rating-stars i', function(e) {
+    $(document).on('click', '#chat-rating-stars .chat-star', function(e) {
         if (isRated) return;
-        let rect = e.target.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let isHalf = x < rect.width / 2;
         let index = parseInt($(this).attr('data-index'));
-        currentRating = isHalf ? index - 0.5 : index;
+        let rect = this.getBoundingClientRect();
+        let starRating = (e.clientX - rect.left) < (rect.width / 2) ? index - 0.5 : index;
+        currentRating = starRating;
         updateStars(currentRating);
-        $('.chat-rating-value').text(currentRating + ' / 5');
+        $('.chat-rating-value').text((Number.isInteger(currentRating) ? currentRating + '.0' : currentRating) + ' / 5.0');
         $('#chat-rating-submit').prop('disabled', false);
     });
 
     function updateStars(rating) {
-        $('#chat-rating-stars i').each(function() {
+        $('#chat-rating-stars .chat-star').each(function() {
             let index = parseInt($(this).attr('data-index'));
-            $(this).removeClass('fas far fa-star fa-star-half-alt');
+            $(this).css({
+                'fill': 'currentColor',
+                'stroke': 'currentColor'
+            });
+            
             if (rating >= index) {
-                $(this).addClass('fas fa-star').css('color', '#fbbf24');
+                $(this).css('color', '#fbbf24');
             } else if (rating === index - 0.5) {
-                $(this).addClass('fas fa-star-half-alt').css('color', '#fbbf24');
+                $(this).css({
+                    'fill': 'url(#star-half-fill)',
+                    'stroke': 'url(#star-half-fill)',
+                    'color': '#fbbf24'
+                });
             } else {
-                $(this).addClass('far fa-star').css('color', '#e5e7eb');
+                $(this).css('color', '#e5e7eb');
             }
         });
     }
@@ -641,6 +660,9 @@ jQuery(document).ready(function ($) {
 
                     // If live chat is true AND live chat is enabled in settings, switch to live chat
                     if (shouldHandoff) {
+                       if (parsedResponse?.response?.chat_id) {
+                            liveChatId = parsedResponse.response.chat_id;
+                        }
                         enterLiveChatMode();
                     }
 

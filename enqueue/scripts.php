@@ -45,15 +45,7 @@ function chatbot_enqueue_scripts($hook)
         'chatbot-settings-js',
         plugin_dir_url(__FILE__) . '../js/chatbotSettings.js',
         ['jquery'],
-        null,
-        true
-    );
-
-    wp_enqueue_script(
-        'chatbot-check-files-js',
-        plugin_dir_url(__FILE__) . '../js/chatbotSettings.js',
-        ['jquery'],
-        null,
+        time(), // Cache-buster
         true
     );
 

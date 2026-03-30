@@ -52,11 +52,29 @@ jQuery(document).ready(function ($) {
                 username: username
             },
             success: function (response) {
-                // Show the server response
-                $('#chatbot-response').html('<p>' + response + '</p>');
-                setTimeout(function () {
-                    $('#chatbot-response').hide(1000);
-                }, 4000);
+                // Parse the JSON response
+                try {
+                    var parsed = typeof response === 'string' ? JSON.parse(response) : response;
+                    
+                    // Show the server response
+                    $('#chatbot-response').html(parsed.html);
+                    setTimeout(function () {
+                        $('#chatbot-response').hide(1000);
+                    }, 4000);
+
+                    // Dynamically toggle live chat section based on account plan
+                    var livechatUi = $('#livechat-ui-section');
+                    if (parsed.has_livechat) {
+                        livechatUi.slideDown();
+                    } else {
+                        livechatUi.slideUp();
+                        // Reset local fields just visually so it matches cleared backend
+                        $('#livechat_secret_key').val('');
+                        $('#ai_chat_enabled').prop('checked', false);
+                    }
+                } catch (e) {
+                    $('#chatbot-response').html('<p>Invalid response from server.</p>');
+                }
             },
             error: function () {
                 // Show error message if AJAX fails
