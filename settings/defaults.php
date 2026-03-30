@@ -29,6 +29,10 @@ function chatbot_default_settings()
     if (get_option('live_chatbot_session_id', null)) {
         add_option('live_chatbot_session_id', null);
     }
+
+    if (get_option('livechat_secret_key') === false) {
+        update_option('livechat_secret_key', '');
+    }
 }
 
 

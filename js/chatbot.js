@@ -240,7 +240,7 @@ jQuery(document).ready(function ($) {
 
         // Initialize Pusher if not already initialized
         if (!pusherInstance) {
-            pusherInstance = new Pusher('vxndobokdf3gjybrbjuj', {
+            pusherInstance = new Pusher(chatbotAjax.livechat_secret_key, {
                 cluster: 'mt1',
                 wsHost: chatbotAjax.livechat_ws_host,
                 wsPort: 443,

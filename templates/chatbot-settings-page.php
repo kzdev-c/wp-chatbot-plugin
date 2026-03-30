@@ -51,7 +51,11 @@
         </div>
         <div class="form-group">
             <label for="token">Token:</label>
-            <input type="text" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required>
+            <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="livechat_secret_key">Livechat Secret Key:</label>
+            <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>">
         </div>
         <button id="submit-btn" name="chatbot_save_settings" value="Save Settings" class="btn btn-primary">Check & Save</button>
     </form>

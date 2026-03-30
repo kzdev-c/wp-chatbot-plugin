@@ -1,5 +1,5 @@
 console.log("REVERB JS RUNNING");
-const pusher = new Pusher("vxndobokdf3gjybrbjuj", {
+const pusher = new Pusher(chatbotAjax.livechat_secret_key, {
     cluster: "mt1",
     wsHost: "chatbot-dashboard.local",
     wsPort: 443,

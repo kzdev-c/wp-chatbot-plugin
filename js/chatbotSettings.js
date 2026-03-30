@@ -49,7 +49,8 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'check_token',
                 token: token,
-                username: username
+                username: username,
+                livechat_secret_key: $('#livechat_secret_key').val()
             },
             success: function (response) {
                 // Show the server response
