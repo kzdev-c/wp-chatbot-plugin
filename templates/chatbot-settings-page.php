@@ -17,6 +17,22 @@
             <label for="chatbot_name">Chatbot Name:</label>
             <input type="text" id="chatbot_name" name="chatbot_name" value="<?php echo esc_attr(get_option('chatbot_name')); ?>">
         </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save</button>
+    </form>
+
+    <hr>
+
+    <div id="livechat-section-response"></div>
+    <form id="livechat-section-form" class="modern-form">
+        <div class="form-group">
+            <label for="chatbot_dashboard_url">Dashboard API Base URL:</label>
+            <input type="url" id="chatbot_dashboard_url" name="chatbot_dashboard_url" value="<?php echo esc_attr(get_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local')); ?>" required>
+        </div>
+        <div class="form-group">
+            <label for="livechat_secret_key">Livechat Secret Key:</label>
+            <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>">
+        </div>
         <div class="form-group" style="margin-top: 20px; padding: 15px; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
             <div style="display: flex; align-items: center;">
                 <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-right: 12px; margin-bottom: 0;">
@@ -36,7 +52,7 @@
                 <span style="font-size: 13px; color: #646970; display: block; line-height: 1.5;">When disabled, the AI automatically handles conversations and smoothly escalates to live chat only when necessary.</span>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save Live Chat Settings</button>
     </form>
 
     <hr>
@@ -53,10 +69,7 @@
             <label for="token">Token:</label>
             <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required>
         </div>
-        <div class="form-group">
-            <label for="livechat_secret_key">Livechat Secret Key:</label>
-            <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>">
-        </div>
+
         <button id="submit-btn" name="chatbot_save_settings" value="Save Settings" class="btn btn-primary">Check & Save</button>
     </form>
 

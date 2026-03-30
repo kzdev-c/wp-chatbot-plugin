@@ -49,8 +49,7 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'check_token',
                 token: token,
-                username: username,
-                livechat_secret_key: $('#livechat_secret_key').val()
+                username: username
             },
             success: function (response) {
                 // Show the server response
@@ -76,7 +75,6 @@ jQuery(document).ready(function ($) {
         // Get the selected value
         var selectedModule = $('#preferred-module').val();
         var chatbot_name = $('#chatbot_name').val();
-        var ai_chat_enabled = $('#ai_chat_enabled').is(':checked') ? '1' : '0';
 
         // Send AJAX request
         $.ajax({
@@ -85,8 +83,7 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'chatbot_settings',
                 preferred_module: selectedModule,
-                chatbot_name: chatbot_name,
-                ai_chat_enabled: ai_chat_enabled
+                chatbot_name: chatbot_name
             },
             success: function (response) {
                 $('#module-response').html('<div class=" alert-success">' + response + '</div>');
@@ -133,6 +130,35 @@ jQuery(document).ready(function ($) {
         });
     });
 
+    $('#livechat-section-form').on('submit', function (event) {
+        event.preventDefault();
 
+        var dashboard_url = $('#chatbot_dashboard_url').val();
+        var secret_key = $('#livechat_secret_key').val();
+        var ai_chat_enabled = $('#ai_chat_enabled').is(':checked') ? '1' : '0';
+
+        $.ajax({
+            url: checkCredentialsAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'chatbot_livechat_settings_save',
+                chatbot_dashboard_url: dashboard_url,
+                livechat_secret_key: secret_key,
+                ai_chat_enabled: ai_chat_enabled
+            },
+            success: function (response) {
+                $('#livechat-section-response').html('<div class=" alert-success">Live chat settings saved successfully.</div>');
+                setTimeout(function () {
+                    $('#livechat-section-response').hide(1000);
+                }, 4000);
+            },
+            error: function (error) {
+                $('#livechat-section-response').html('<div class=" alert-danger">Error saving live chat settings.</div>');
+                setTimeout(function () {
+                    $('#livechat-section-response').hide(1000);
+                }, 4000);
+            }
+        });
+    });
 
 });
