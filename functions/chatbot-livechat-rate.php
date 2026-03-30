@@ -5,7 +5,7 @@
  */
 
 $chat_id = intval($_POST['chat_id']);
-$rating  = intval($_POST['rating']);
+$rating  = floatval($_POST['rating']);
 $comment = isset($_POST['comment']) ? sanitize_text_field($_POST['comment']) : '';
 
 $token    = get_option('chatbot_token');
@@ -16,8 +16,8 @@ if (empty($token)) {
     wp_die();
 }
 
-if (empty($chat_id) || $rating < 1 || $rating > 5) {
-    echo json_encode(['error' => 'Valid Chat ID and rating (1-5) are required.']);
+if (empty($chat_id) || $rating < 0.5 || $rating > 5) {
+    echo json_encode(['error' => 'Valid Chat ID and rating (0.5-5) are required.']);
     wp_die();
 }
 

@@ -144,6 +144,12 @@ jQuery(document).ready(function ($) {
         event.stopPropagation();
     });
 
+    // Auto-resize input field based on content
+    inputField.on('input', function() {
+        this.style.height = '40px';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+
     // ===== Live Chat Mode UI Updates =====
     function enterLiveChatMode(silent) {
         isLiveChatMode = true;
@@ -261,7 +267,9 @@ jQuery(document).ready(function ($) {
             if (e.sender_type === 'agent' || e.sender_type === 'system') {
                 if (e.message === '[[CHAT_RESOLVED]]') {
                     appendSystemMessage('The chat has been closed by the agent.');
+                    let closedChatId = liveChatId;
                     exitLiveChatMode();
+                    showRatingUI(closedChatId);
                 } else {
                     if (!e.id || e.id > lastMessageId) {
                         appendAgentMessage(e.message || e.content || '');
@@ -342,7 +350,6 @@ jQuery(document).ready(function ($) {
                 <div class="message-content">${message}</div>
             </div>
         `);
-        inputField.val('');
         scrollToBottom();
 
         // Send not-typing indicator (stops typing when message is sent)
@@ -356,7 +363,6 @@ jQuery(document).ready(function ($) {
             }
         });
         typingThrottleTime = 0;
-
         // Send the actual message
         $.ajax({
             url: chatbotAjax.ajaxurl,
@@ -412,7 +418,9 @@ jQuery(document).ready(function ($) {
             },
             success: function () {
                 appendSystemMessage('Chat has been closed.');
+                let closedChatId = liveChatId;
                 exitLiveChatMode();
+                showRatingUI(closedChatId);
             },
             error: function () {
                 appendSystemMessage('Failed to close chat. Please try again.');
@@ -441,11 +449,117 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    // ===== Rating UI =====
+    let currentRating = 0;
+    let isRated = false;
+    let originalPlaceholder = '';
+
+    function showRatingUI(chatId) {
+        if ($('#chat-rating-box').length > 0) return; // already shown
+
+        // Disable input until rated
+        originalPlaceholder = inputField.attr('placeholder') || 'Type your message...';
+        inputField.prop('disabled', true).attr('placeholder', 'Please rate the chat to continue...');
+        sendButton.prop('disabled', true);
+
+        messagesContainer.append(`
+            <div class="chatbot-message system-message chat-rating-container" id="chat-rating-box">
+                <div class="chat-rating-title">How was your chat experience?</div>
+                <div class="chat-rating-stars-js" id="chat-rating-stars">
+                    <i class="far fa-star" data-index="1"></i>
+                    <i class="far fa-star" data-index="2"></i>
+                    <i class="far fa-star" data-index="3"></i>
+                    <i class="far fa-star" data-index="4"></i>
+                    <i class="far fa-star" data-index="5"></i>
+                </div>
+                <div class="chat-rating-value" style="font-size: 13px; color: #6b7280; margin-top: 8px; font-weight: 500;">0 / 5</div>
+                <button class="chat-rating-submit" id="chat-rating-submit" data-chat="${chatId}" disabled>Submit Rating</button>
+            </div>
+        `);
+        scrollToBottom();
+    }
+
+    $(document).on('mousemove', '#chat-rating-stars i', function(e) {
+        if (isRated) return;
+        let rect = e.target.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let isHalf = x < rect.width / 2;
+        let index = parseInt($(this).attr('data-index'));
+        let hoverRating = isHalf ? index - 0.5 : index;
+        updateStars(hoverRating);
+    });
+
+    $(document).on('mouseleave', '#chat-rating-stars', function() {
+        if (isRated) return;
+        updateStars(currentRating);
+    });
+
+    $(document).on('click', '#chat-rating-stars i', function(e) {
+        if (isRated) return;
+        let rect = e.target.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        let isHalf = x < rect.width / 2;
+        let index = parseInt($(this).attr('data-index'));
+        currentRating = isHalf ? index - 0.5 : index;
+        updateStars(currentRating);
+        $('.chat-rating-value').text(currentRating + ' / 5');
+        $('#chat-rating-submit').prop('disabled', false);
+    });
+
+    function updateStars(rating) {
+        $('#chat-rating-stars i').each(function() {
+            let index = parseInt($(this).attr('data-index'));
+            $(this).removeClass('fas far fa-star fa-star-half-alt');
+            if (rating >= index) {
+                $(this).addClass('fas fa-star').css('color', '#fbbf24');
+            } else if (rating === index - 0.5) {
+                $(this).addClass('fas fa-star-half-alt').css('color', '#fbbf24');
+            } else {
+                $(this).addClass('far fa-star').css('color', '#e5e7eb');
+            }
+        });
+    }
+
+    $(document).on('click', '#chat-rating-submit', function() {
+        let btn = $(this);
+        let targetChatId = btn.attr('data-chat');
+        if (currentRating === 0 || !targetChatId) return;
+        
+        btn.prop('disabled', true).text('Submitting...');
+        isRated = true;
+
+        $.ajax({
+            url: chatbotAjax.ajaxurl,
+            method: 'POST',
+            data: {
+                action: 'livechat_rate',
+                chat_id: targetChatId,
+                rating: currentRating
+            },
+            success: function(response) {
+                $('#chat-rating-box').html('<div class="chat-rating-title" style="margin-bottom:0; color:#10b981;">Thank you for your feedback!</div>');
+                
+                // Re-enable input
+                inputField.prop('disabled', false).attr('placeholder', originalPlaceholder);
+                sendButton.prop('disabled', false);
+            },
+            error: function() {
+                btn.prop('disabled', false).text('Submit Rating');
+                isRated = false;
+                appendSystemMessage('Failed to submit rating. Please try again.');
+            }
+        });
+    });
+
     // ===== Main Send Message (AI or Live Chat) =====
     function sendMessage() {
         var question = inputField.val();
 
         if (question.trim() === '') return;
+
+        // Reset input height
+        inputField.val('');
+        inputField.css('height', '40px');
 
         // If in live chat mode, route to live chat
         if (isLiveChatMode) {
@@ -460,7 +574,6 @@ jQuery(document).ready(function ($) {
                 <div class="message-content">${question}</div>
             </div>
         `);
-        inputField.val('');
         scrollToBottom();
 
         $('#codeness-chatbot-messages').append(`
@@ -782,6 +895,9 @@ jQuery(document).ready(function ($) {
                         if (chatResolved) {
                             appendSystemMessage('Your previous chat was resolved.');
                             console.log('[LiveChat] Chat was resolved, staying in AI mode');
+                            if (parsed.has_rate_key) {
+                                showRatingUI(liveChatId);
+                            }
                             return;
                         }
 

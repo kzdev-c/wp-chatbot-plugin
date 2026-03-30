@@ -9,7 +9,8 @@ Icon: icon.png
 
 
 define('CHATBOT_API_BASE_URL', 'https://chatbots.codenesslab.com');
-define('CHATBOT_DASHBOARD_API_BASE_URL', 'https://chatbots-dashboard.codenesslab.com');
+define('CHATBOT_DASHBOARD_API_BASE_URL', 'https://chatbot-dashboard.local');
+// define('CHATBOT_DASHBOARD_API_BASE_URL', 'https://chatbots-dashboard.codenesslab.com');
 
 require_once plugin_dir_path(__FILE__) . 'admin/menu.php';
 require_once plugin_dir_path(__FILE__) . 'enqueue/scripts.php';
