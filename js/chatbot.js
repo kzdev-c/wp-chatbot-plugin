@@ -891,13 +891,11 @@ jQuery(document).ready(function ($) {
 
                         scrollToBottom();
 
-                        // If the last system message was CHAT_RESOLVED, don't enter live chat
-                        if (chatResolved) {
+                        // If the chat is resolved (via message or rate key), don't enter live chat
+                        if (chatResolved || parsed.has_rate_key) {
                             appendSystemMessage('Your previous chat was resolved.');
                             console.log('[LiveChat] Chat was resolved, staying in AI mode');
-                            if (parsed.has_rate_key) {
-                                showRatingUI(liveChatId);
-                            }
+                            showRatingUI(liveChatId);
                             return;
                         }
 
