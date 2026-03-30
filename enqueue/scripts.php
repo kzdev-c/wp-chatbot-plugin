@@ -2,6 +2,14 @@
 
 function chatbot_enqueue_scripts($hook)
 {
+    // Utility functions (like chat_clog)
+    wp_enqueue_script(
+        'chatbot-utils-js',
+        plugin_dir_url(__FILE__) . '../js/chatbot-utils.js',
+        [],
+        '1.0',
+        false
+    );
 
     // Add Pusher and Echo for WebSockets
     wp_enqueue_script(

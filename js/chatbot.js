@@ -145,7 +145,7 @@ jQuery(document).ready(function ($) {
     });
 
     // Auto-resize input field based on content
-    inputField.on('input', function() {
+    inputField.on('input', function () {
         this.style.height = '40px';
         this.style.height = (this.scrollHeight) + 'px';
     });
@@ -250,7 +250,7 @@ jQuery(document).ready(function ($) {
             });
 
             pusherInstance.connection.bind('connected', () => {
-                console.log('[LiveChat] WebSocket connected');
+                chat_clog('[LiveChat] WebSocket connected');
             });
 
             pusherInstance.connection.bind('error', (err) => {
@@ -261,7 +261,7 @@ jQuery(document).ready(function ($) {
         liveChatChannel = pusherInstance.subscribe(`livechat.${liveChatId}`);
 
         liveChatChannel.bind('chat-message-sent', (e) => {
-            console.log('[LiveChat] New Message:', e);
+            chat_clog('[LiveChat] New Message:', e);
             hideAgentTyping();
 
             if (e.sender_type === 'agent' || e.sender_type === 'system') {
@@ -281,14 +281,14 @@ jQuery(document).ready(function ($) {
 
         liveChatChannel.bind('typing-indicator', (e) => {
             if (e.sender_type === 'agent') {
-                console.log('[LiveChat] Agent is typing...');
+                chat_clog('[LiveChat] Agent is typing...');
                 showAgentTyping();
             }
         });
 
         liveChatChannel.bind('not-typing-indicator', (e) => {
             if (e.sender_type === 'agent') {
-                console.log('[LiveChat] Agent stopped typing.');
+                chat_clog('[LiveChat] Agent stopped typing.');
                 hideAgentTyping();
             }
         });
@@ -373,22 +373,22 @@ jQuery(document).ready(function ($) {
                 message: message
             },
             success: function (response) {
-                console.log('[LiveChat DEBUG] Raw response:', response);
+                chat_clog('[LiveChat DEBUG] Raw response:', response);
                 try {
                     const parsed = typeof response === 'string' ? JSON.parse(response) : response;
-                    // console.log('[LiveChat DEBUG] Parsed response:', parsed);
+                    // chat_clog('[LiveChat DEBUG] Parsed response:', parsed);
                     // if (parsed._debug) {
-                    //     console.log('[LiveChat DEBUG] Request URL:', parsed._debug.url);
-                    //     console.log('[LiveChat DEBUG] HTTP Code:', parsed._debug.http_code);
-                    //     console.log('[LiveChat DEBUG] Post Data:', parsed._debug.post_data);
-                    //     console.log('[LiveChat DEBUG] API Raw Response:', parsed._debug.raw_response);
+                    //     chat_clog('[LiveChat DEBUG] Request URL:', parsed._debug.url);
+                    //     chat_clog('[LiveChat DEBUG] HTTP Code:', parsed._debug.http_code);
+                    //     chat_clog('[LiveChat DEBUG] Post Data:', parsed._debug.post_data);
+                    //     chat_clog('[LiveChat DEBUG] API Raw Response:', parsed._debug.raw_response);
                     // }
                     if (parsed.success && parsed.data) {
                         // Store chat_id if returned
                         if (parsed.data.chat_id) {
                             let isNewChatId = !liveChatId;
                             liveChatId = parsed.data.chat_id;
-                            
+
                             // Initialize WebSocket if this is the first time we've received the chat_id
                             if (isNewChatId) {
                                 startWebSocket();
@@ -461,114 +461,178 @@ jQuery(document).ready(function ($) {
     let originalPlaceholder = '';
 
     function showRatingUI(chatId) {
-        if ($('#chat-rating-box').length > 0) return; // already shown
+        if ($('#chat-rating-box').length > 0) return;
 
-        // Disable input until rated
         originalPlaceholder = inputField.attr('placeholder') || 'Type your message...';
         inputField.prop('disabled', true).attr('placeholder', 'Please rate the chat to continue...');
         sendButton.prop('disabled', true);
 
         messagesContainer.append(`
-            <div class="chatbot-message system-message chat-rating-container" id="chat-rating-box">
-                <div class="chat-rating-title">How was your chat experience?</div>
-                <div class="chat-rating-stars-js" id="chat-rating-stars" style="display:flex; justify-content:center; gap:4px; margin-top:8px; position:relative;">
-                    <svg width="0" height="0" style="position:absolute;">
-                        <defs>
-                            <linearGradient id="star-half-fill" x1="0" y1="0" x2="1" y2="0">
-                                <stop offset="50%" stop-color="#fbbf24" />
-                                <stop offset="50%" stop-color="#e5e7eb" />
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <svg class="chat-star" data-index="1" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    <svg class="chat-star" data-index="2" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    <svg class="chat-star" data-index="3" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    <svg class="chat-star" data-index="4" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                    <svg class="chat-star" data-index="5" style="cursor:pointer; width:28px; height:28px; color:#e5e7eb; transition:color 0.2s;" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                </div>
-                <div class="chat-rating-value" style="font-size: 13px; color: #6b7280; margin-top: 8px; font-weight: 500;">0.0 / 5.0</div>
-                <button class="chat-rating-submit" id="chat-rating-submit" data-chat="${chatId}" disabled>Submit Rating</button>
+        <div class="chatbot-message system-message chat-rating-container" id="chat-rating-box">
+            <style>
+                #chat-rating-box { background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; padding: 1.5rem 2rem; text-align: center; max-width: 340px; margin: 0 auto; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+                .cr-icon-wrap { width: 40px; height: 40px; border-radius: 50%; background: #f9fafb; border: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.9rem; }
+                .cr-title { font-size: 15px; font-weight: 600; color: #111; margin: 0 0 3px; }
+                .cr-sub { font-size: 12px; color: #9ca3af; margin: 0 0 1.25rem; }
+                .cr-stars { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; user-select: none; }
+                .cr-star-wrap { position: relative; width: 32px; height: 32px; cursor: pointer; flex-shrink: 0; }
+                .cr-star-wrap svg { position: absolute; top: 0; left: 0; width: 32px; height: 32px; pointer-events: none; transition: transform 0.12s ease; }
+                .cr-star-wrap:hover svg { transform: scale(1.18); }
+                .cr-half-zone { position: absolute; top: 0; left: 0; width: 50%; height: 100%; z-index: 2; }
+                .cr-full-zone { position: absolute; top: 0; left: 50%; width: 50%; height: 100%; z-index: 2; }
+                .cr-pip-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 0.9rem; }
+                .cr-pip { width: 5px; height: 5px; border-radius: 50%; background: #e5e7eb; transition: background 0.2s; }
+                .cr-pip.on { background: #f59e0b; }
+                .cr-label { font-size: 12px; font-weight: 500; color: #9ca3af; height: 16px; margin-bottom: 1rem; transition: color 0.15s; letter-spacing: 0.3px; text-transform: uppercase; }
+                .cr-label.active { color: #6b7280; }
+                .chat-rating-submit { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; color: #9ca3af; font-size: 13px; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; }
+                .chat-rating-submit.ready { opacity: 1; cursor: pointer; background: #111; color: #fff; border-color: #111; }
+                .chat-rating-submit.ready:hover { background: #333; border-color: #333; }
+                .cr-success { display: none; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; }
+                .cr-success-check { width: 36px; height: 36px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+                .cr-success-title { font-size: 14px; font-weight: 600; color: #111; margin: 0; }
+                .cr-success-sub { font-size: 12px; color: #9ca3af; margin: 0; }
+            </style>
+
+            <svg width="0" height="0" style="position:absolute;">
+                <defs>
+                    <linearGradient id="cr-half-grad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="50%" stop-color="#f59e0b"/>
+                        <stop offset="50%" stop-color="#e5e7eb"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+
+            <div class="cr-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </div>
-        `);
+            <p class="cr-title">How was your experience?</p>
+            <p class="cr-sub">Your feedback helps us improve.</p>
+
+            <div class="cr-stars" id="cr-stars">
+                ${[1, 2, 3, 4, 5].map(i => `
+                <div class="cr-star-wrap" data-index="${i}">
+                    <svg viewBox="0 0 24 24" fill="#e5e7eb" stroke="#e5e7eb" stroke-width="1">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                    <div class="cr-half-zone" data-val="${i - 0.5}"></div>
+                    <div class="cr-full-zone" data-val="${i}"></div>
+                </div>`).join('')}
+            </div>
+
+            <div class="cr-pip-row" id="cr-pips">
+                ${[1, 2, 3, 4, 5].map(i => `<div class="cr-pip" id="cr-pip-${i}"></div>`).join('')}
+            </div>
+
+            <div class="cr-label" id="cr-label">Tap to rate</div>
+            <button class="chat-rating-submit" id="chat-rating-submit" data-chat="${chatId}" disabled>Submit Rating</button>
+
+            <div class="cr-success" id="cr-success">
+                <div class="cr-success-check">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <p class="cr-success-title">Thanks for rating!</p>
+                <p class="cr-success-sub" id="cr-success-detail"></p>
+            </div>
+        </div>
+    `);
+
         scrollToBottom();
-    }
 
-    $(document).on('mousemove', '#chat-rating-stars .chat-star', function(e) {
-        if (isRated) return;
-        let index = parseInt($(this).attr('data-index'));
-        let rect = this.getBoundingClientRect();
-        let starRating = (e.clientX - rect.left) < (rect.width / 2) ? index - 0.5 : index;
-        updateStars(starRating);
-    });
+        // ── Star interaction logic ──────────────────────────────
+        const LABELS = {
+            0.5: 'Terrible', 1: 'Poor', 1.5: 'Below average', 2: 'Fair', 2.5: 'Okay',
+            3: 'Good', 3.5: 'Pretty good', 4: 'Great', 4.5: 'Excellent', 5: 'Outstanding'
+        };
 
-    $(document).on('mouseleave', '#chat-rating-stars', function() {
-        if (isRated) return;
-        updateStars(currentRating);
-    });
+        let selectedVal = 0;
+        let hoverVal = 0;
 
-    $(document).on('click', '#chat-rating-stars .chat-star', function(e) {
-        if (isRated) return;
-        let index = parseInt($(this).attr('data-index'));
-        let rect = this.getBoundingClientRect();
-        let starRating = (e.clientX - rect.left) < (rect.width / 2) ? index - 0.5 : index;
-        currentRating = starRating;
-        updateStars(currentRating);
-        $('.chat-rating-value').text((Number.isInteger(currentRating) ? currentRating + '.0' : currentRating) + ' / 5.0');
-        $('#chat-rating-submit').prop('disabled', false);
-    });
-
-    function updateStars(rating) {
-        $('#chat-rating-stars .chat-star').each(function() {
-            let index = parseInt($(this).attr('data-index'));
-            $(this).css({
-                'fill': 'currentColor',
-                'stroke': 'currentColor'
+        function fillStars(val) {
+            $('#cr-stars .cr-star-wrap').each(function () {
+                const idx = +$(this).data('index');
+                const svg = $(this).find('svg');
+                if (val >= idx) {
+                    svg.attr({ fill: '#f59e0b', stroke: '#d97706' });
+                } else if (val >= idx - 0.5) {
+                    svg.attr({ fill: 'url(#cr-half-grad)', stroke: '#e5e7eb' });
+                } else {
+                    svg.attr({ fill: '#e5e7eb', stroke: '#e5e7eb' });
+                }
             });
-            
-            if (rating >= index) {
-                $(this).css('color', '#fbbf24');
-            } else if (rating === index - 0.5) {
-                $(this).css({
-                    'fill': 'url(#star-half-fill)',
-                    'stroke': 'url(#star-half-fill)',
-                    'color': '#fbbf24'
-                });
-            } else {
-                $(this).css('color', '#e5e7eb');
+            // pips — light up pip for each full star reached
+            for (let i = 1; i <= 5; i++) {
+                $('#cr-pip-' + i).toggleClass('on', val >= i - 0.4);
             }
+        }
+
+        function setLabel(val, active) {
+            const labelEl = $('#cr-label');
+            labelEl.text(active && val ? LABELS[val] || '' : (selectedVal ? LABELS[selectedVal] : 'Tap to rate'));
+            labelEl.toggleClass('active', active || !!selectedVal);
+        }
+
+        // Hover
+        $('#cr-stars').on('mouseenter', '[data-val]', function () {
+            hoverVal = +$(this).data('val');
+            fillStars(hoverVal);
+            setLabel(hoverVal, true);
+        });
+
+        $('#cr-stars').on('mouseleave', function () {
+            hoverVal = 0;
+            fillStars(selectedVal);
+            setLabel(0, false);
+        });
+
+        // Click
+        $('#cr-stars').on('click', '[data-val]', function () {
+            selectedVal = +$(this).data('val');
+            fillStars(selectedVal);
+            setLabel(selectedVal, true);
+            $('#chat-rating-submit').prop('disabled', false).addClass('ready');
+            // Keep chat-rating-value in sync for any external listeners
+            $('.chat-rating-value').text(selectedVal.toFixed(1) + ' / 5.0');
+        });
+
+        // Submit
+        $(document).on('click', '#chat-rating-submit', function () {
+            if (!selectedVal) return;
+            const chatIdVal = $(this).data('chat');
+            const btn = $(this);
+            const originalText = btn.text();
+
+            btn.prop('disabled', true).text('Submitting...');
+            isRated = true;
+
+            $.ajax({
+                url: chatbotAjax.ajaxurl,
+                method: 'POST',
+                data: {
+                    action: 'livechat_rate',
+                    chat_id: chatIdVal,
+                    rating: selectedVal
+                },
+                success: function (response) {
+                    $('#cr-stars, .cr-pip-row, #cr-label, #chat-rating-submit').hide();
+                    $('#cr-success-detail').text('You rated this chat ' + selectedVal + ' out of 5 — ' + LABELS[selectedVal] + '.');
+                    $('#cr-success').css('display', 'flex');
+
+                    // Re-enable input
+                    inputField.prop('disabled', false).attr('placeholder', originalPlaceholder);
+                    sendButton.prop('disabled', false);
+
+                    scrollToBottom();
+                },
+                error: function () {
+                    btn.prop('disabled', false).text(originalText);
+                    isRated = false;
+                    appendSystemMessage('Failed to submit rating. Please try again.');
+                    scrollToBottom();
+                }
+            });
         });
     }
-
-    $(document).on('click', '#chat-rating-submit', function() {
-        let btn = $(this);
-        let targetChatId = btn.attr('data-chat');
-        if (currentRating === 0 || !targetChatId) return;
-        
-        btn.prop('disabled', true).text('Submitting...');
-        isRated = true;
-
-        $.ajax({
-            url: chatbotAjax.ajaxurl,
-            method: 'POST',
-            data: {
-                action: 'livechat_rate',
-                chat_id: targetChatId,
-                rating: currentRating
-            },
-            success: function(response) {
-                $('#chat-rating-box').html('<div class="chat-rating-title" style="margin-bottom:0; color:#10b981;">Thank you for your feedback!</div>');
-                
-                // Re-enable input
-                inputField.prop('disabled', false).attr('placeholder', originalPlaceholder);
-                sendButton.prop('disabled', false);
-            },
-            error: function() {
-                btn.prop('disabled', false).text('Submit Rating');
-                isRated = false;
-                appendSystemMessage('Failed to submit rating. Please try again.');
-            }
-        });
-    });
 
     // ===== Main Send Message (AI or Live Chat) =====
     function sendMessage() {
@@ -648,7 +712,7 @@ jQuery(document).ready(function ($) {
                                 </div>
                             </div>
                         `);
-                    } else if(!shouldHandoff) {
+                    } else if (!shouldHandoff) {
                         $('#codeness-chatbot-messages').append(`
                         <div class="chatbot-message bot-message">
                             <div class="message-header">Bot</div>
@@ -660,7 +724,7 @@ jQuery(document).ready(function ($) {
 
                     // If live chat is true AND live chat is enabled in settings, switch to live chat
                     if (shouldHandoff) {
-                       if (parsedResponse?.response?.chat_id) {
+                        if (parsedResponse?.response?.chat_id) {
                             liveChatId = parsedResponse.response.chat_id;
                         }
                         enterLiveChatMode();
@@ -685,7 +749,7 @@ jQuery(document).ready(function ($) {
     });
 
     messagesContainer.on('click', '#no-button', function () {
-        // console.log('No button clicked');
+        // chat_clog('No button clicked');
     });
 
     closeModalButton.on('click', function () {
@@ -873,12 +937,12 @@ jQuery(document).ready(function ($) {
 
                     if (parsed.error) {
                         // "Chat not found" or other error — no existing session, stay in AI mode
-                        console.log('[LiveChat] No existing chat found:', parsed.error);
+                        chat_clog('[LiveChat] No existing chat found:', parsed.error);
                         return;
                     }
 
                     if (parsed.success && parsed.messages && parsed.messages.length > 0) {
-                        console.log('[LiveChat] Loading', parsed.messages.length, 'existing messages');
+                        chat_clog('[LiveChat] Loading', parsed.messages.length, 'existing messages');
 
                         let chatResolved = false;
 
@@ -916,7 +980,7 @@ jQuery(document).ready(function ($) {
                         // If the chat is resolved (via message or rate key), don't enter live chat
                         if (chatResolved || parsed.has_rate_key) {
                             appendSystemMessage('Your previous chat was resolved.');
-                            console.log('[LiveChat] Chat was resolved, staying in AI mode');
+                            chat_clog('[LiveChat] Chat was resolved, staying in AI mode');
                             showRatingUI(liveChatId);
                             return;
                         }

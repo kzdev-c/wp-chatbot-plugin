@@ -17,7 +17,7 @@ jQuery(document).ready(function ($) {
     const checkFilesContainer = $('#check-files-container');
 
     function toggleCheckFilesButton() {
-        console.log('Toggle function called');
+        chat_clog('Toggle function called');
         if (preferredModuleSelect.val() === 'file_upload') {
             checkFilesContainer.show();
         } else {

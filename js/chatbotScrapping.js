@@ -34,7 +34,7 @@ jQuery(document).ready(function ($) {
         e.preventDefault();
         $('#loading-animation').show();
 
-        console.log('test')
+        chat_clog('test')
 
         var useSiteDomain = useSiteDomainCheckbox.is(':checked');
         var customDomain = customDomainInput.val() ?? null;

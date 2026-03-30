@@ -53,6 +53,7 @@ curl_setopt_array($curl, [
 ]);
 
 $response = curl_exec($curl);
+print_r($response);
 
 if ($response === false) {
     echo json_encode(['error' => curl_error($curl)]);
