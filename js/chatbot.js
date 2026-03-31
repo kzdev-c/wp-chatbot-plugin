@@ -523,31 +523,6 @@ jQuery(document).ready(function ($) {
 
         messagesContainer.append(`
         <div class="chatbot-message system-message chat-rating-container" id="chat-rating-box">
-            <style>
-                #chat-rating-box { background: #fff; border: 1px solid #f0f0f0; border-radius: 16px; padding: 1.5rem 2rem; text-align: center; max-width: 340px; margin: 0 auto; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
-                .cr-icon-wrap { width: 40px; height: 40px; border-radius: 50%; background: #f9fafb; border: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.9rem; }
-                .cr-title { font-size: 15px; font-weight: 600; color: #111; margin: 0 0 3px; }
-                .cr-sub { font-size: 12px; color: #9ca3af; margin: 0 0 1.25rem; }
-                .cr-stars { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; user-select: none; }
-                .cr-star-wrap { position: relative; width: 32px; height: 32px; cursor: pointer; flex-shrink: 0; }
-                .cr-star-wrap svg { position: absolute; top: 0; left: 0; width: 32px; height: 32px; pointer-events: none; transition: transform 0.12s ease; }
-                .cr-star-wrap:hover svg { transform: scale(1.18); }
-                .cr-half-zone { position: absolute; top: 0; left: 0; width: 50%; height: 100%; z-index: 2; }
-                .cr-full-zone { position: absolute; top: 0; left: 50%; width: 50%; height: 100%; z-index: 2; }
-                .cr-pip-row { display: flex; justify-content: center; gap: 5px; margin-bottom: 0.9rem; }
-                .cr-pip { width: 5px; height: 5px; border-radius: 50%; background: #e5e7eb; transition: background 0.2s; }
-                .cr-pip.on { background: #f59e0b; }
-                .cr-label { font-size: 12px; font-weight: 500; color: #9ca3af; height: 16px; margin-bottom: 1rem; transition: color 0.15s; letter-spacing: 0.3px; text-transform: uppercase; }
-                .cr-label.active { color: #6b7280; }
-                .chat-rating-submit { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #e5e7eb; background: transparent; color: #9ca3af; font-size: 13px; font-weight: 500; cursor: not-allowed; opacity: 0.5; transition: all 0.2s; }
-                .chat-rating-submit.ready { opacity: 1; cursor: pointer; background: #111; color: #fff; border-color: #111; }
-                .chat-rating-submit.ready:hover { background: #333; border-color: #333; }
-                .cr-success { display: none; flex-direction: column; align-items: center; gap: 6px; padding: 4px 0; }
-                .cr-success-check { width: 36px; height: 36px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
-                .cr-success-title { font-size: 14px; font-weight: 600; color: #111; margin: 0; }
-                .cr-success-sub { font-size: 12px; color: #9ca3af; margin: 0; }
-            </style>
-
             <svg width="0" height="0" style="position:absolute;">
                 <defs>
                     <linearGradient id="cr-half-grad" x1="0" y1="0" x2="1" y2="0">
