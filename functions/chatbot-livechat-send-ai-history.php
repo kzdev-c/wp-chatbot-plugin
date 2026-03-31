@@ -42,8 +42,8 @@ $post_data = [
     'conversations' => $conversations,
 ];
 
-if (isset($_POST['agent_id']) && !empty($_POST['agent_id'])) {
-    $post_data['agent_id'] = intval($_POST['agent_id']);
+if (isset($_POST['agentId']) && !empty($_POST['agentId'])) {
+    $post_data['agentId'] = intval($_POST['agentId']);
 }
 
 // DEBUG: Log request details

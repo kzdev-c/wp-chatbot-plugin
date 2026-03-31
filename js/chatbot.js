@@ -243,7 +243,7 @@ jQuery(document).ready(function ($) {
                         action: 'livechat_send_ai_history',
                         session_id: liveChatSessionId,
                         conversations: conversations,
-                        agent_id: agentId
+                        agentId: agentId
                     },
                     success: function() {
                         chat_clog('[LiveChat] AI history sent successfully.');
@@ -758,6 +758,7 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 try {
                     const parsedResponse = JSON.parse(response);
+                    chat_clog(parsedResponse)
 
                     // Handle error responses from the backend
                     if (parsedResponse.error) {

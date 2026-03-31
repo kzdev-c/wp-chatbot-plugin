@@ -2,6 +2,7 @@
 
 function chatbot_handle_question()
 {
+    // include plugin_dir_path(__FILE__) . '../functions/chatbot-handle-question-local-ai.php';
     include plugin_dir_path(__FILE__) . '../functions/chatbot-handle-question.php';
 }
 
