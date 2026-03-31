@@ -255,10 +255,21 @@ jQuery(document).ready(function ($) {
         langSel.prop('disabled', false).removeClass('tts-disabled');
     }
 
+    function formatChatMessage(text) {
+        if (!text) return '';
+        // Strip escaping for single quotes, double quotes, and backslashes
+        text = text.replace(/\\'/g, "'").replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+        // Replace newlines with <br>
+        text = text.replace(/\n/g, '<br>');
+        // Very basic markdown for bold texts
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        return text;
+    }
+
     function appendSystemMessage(text) {
         messagesContainer.append(`
             <div class="chatbot-message system-message">
-                <div class="message-content"><em>${text}</em></div>
+                <div class="message-content"><em>${formatChatMessage(text)}</em></div>
             </div>
         `);
         scrollToBottom();
@@ -268,7 +279,7 @@ jQuery(document).ready(function ($) {
         messagesContainer.append(`
             <div class="chatbot-message bot-message agent-message">
                 <div class="message-header">Agent</div>
-                <div class="message-content">${text}</div>
+                <div class="message-content">${formatChatMessage(text)}</div>
             </div>
         `);
         scrollToBottom();
@@ -984,36 +995,64 @@ jQuery(document).ready(function ($) {
                         return;
                     }
 
-                    if (parsed.success && parsed.messages && parsed.messages.length > 0) {
-                        chat_clog('[LiveChat] Loading', parsed.messages.length, 'existing messages');
+                    if (parsed.success) {
+                        // Render ai_messages first
+                        if (parsed.ai_messages && parsed.ai_messages.length > 0) {
+                            chat_clog('[LiveChat] Loading', parsed.ai_messages.length, 'existing AI messages');
+                            parsed.ai_messages.forEach(function (msg) {
+                                let formattedMsg = formatChatMessage(msg.message);
+                                if (msg.sender === 'visitor') {
+                                    messagesContainer.append(`
+                                        <div class="chatbot-message user-message ai-history-message" style="background-color: #f3f4f6; filter: grayscale(20%); opacity: 0.9;">
+                                            <div class="message-header">You</div>
+                                            <div class="message-content">${formattedMsg}</div>
+                                        </div>
+                                    `);
+                                } else if (msg.sender === 'aibot') {
+                                    messagesContainer.append(`
+                                        <div class="chatbot-message bot-message ai-history-message" style="background-color: #f8f9fa; filter: grayscale(20%); opacity: 0.9;">
+                                            <div class="message-header">Bot</div>
+                                            <div class="message-content">${formattedMsg}</div>
+                                        </div>
+                                    `);
+                                }
+                            });
+                            
+                            appendSystemMessage("You're now chatting with a live agent. Let us know how we can help!");
+                        }
 
-                        let chatResolved = false;
+                        if (parsed.messages && parsed.messages.length > 0) {
+                            chat_clog('[LiveChat] Loading', parsed.messages.length, 'existing messages');
 
-                        parsed.messages.forEach(function (msg) {
-                            // Track the last message ID for dedup
-                            if (msg.id && msg.id > lastMessageId) {
-                                lastMessageId = msg.id;
-                            }
+                            let chatResolved = false;
 
-                            // Store chat ID from the first message
-                            if (msg.live_chat_id && !liveChatId) {
-                                liveChatId = msg.live_chat_id;
-                            }
+                            parsed.messages.forEach(function (msg) {
+                                // Track the last message ID for dedup
+                                if (msg.id && msg.id > lastMessageId) {
+                                    lastMessageId = msg.id;
+                                }
 
-                            if (msg.sender_type === 'visitor') {
+                                // Store chat ID from the first message
+                                if (msg.live_chat_id && !liveChatId) {
+                                    liveChatId = msg.live_chat_id;
+                                }
+
+                                let formattedMsg = formatChatMessage(msg.message);
+
+                                if (msg.sender_type === 'visitor') {
                                 messagesContainer.append(`
                                     <div class="chatbot-message user-message">
                                         <div class="message-header">You</div>
-                                        <div class="message-content">${msg.message}</div>
+                                        <div class="message-content">${formattedMsg}</div>
                                     </div>
                                 `);
                             } else if (msg.sender_type === 'agent') {
-                                appendAgentMessage(msg.message);
+                                appendAgentMessage(formattedMsg);
                             } else if (msg.sender_type === 'system') {
                                 if (msg.message === '[[CHAT_RESOLVED]]') {
                                     chatResolved = true;
                                 } else {
-                                    appendSystemMessage(msg.message);
+                                    appendSystemMessage(formattedMsg);
                                 }
                             }
                         });
@@ -1028,8 +1067,13 @@ jQuery(document).ready(function ($) {
                             return;
                         }
 
+                        }
+
                         // Enter live chat mode silently (no "connected" message)
-                        enterLiveChatMode(true);
+                        // This happens as long as success is true and we loaded either ai or normal messages
+                        if ((parsed.ai_messages && parsed.ai_messages.length > 0) || (parsed.messages && parsed.messages.length > 0)) {
+                            enterLiveChatMode(true);
+                        }
                     }
                 } catch (e) {
                     console.error('[LiveChat] Error parsing get-messages response:', e);

@@ -63,6 +63,7 @@ if ($response === false) {
         echo json_encode([
             'success'      => true,
             'messages'     => isset($decoded['messages']) ? $decoded['messages'] : [],
+            'ai_messages'  => isset($decoded['ai_messages']) ? $decoded['ai_messages'] : [],
             'has_rate_key' => array_key_exists('rate', $decoded),
             'rate'         => isset($decoded['rate']) ? $decoded['rate'] : null,
         ]);
