@@ -18,6 +18,46 @@ jQuery(document).ready(function ($) {
 
     let typingThrottleTime = 0;
     let notTypingTimeout = null;
+    let unreadCount = parseInt(sessionStorage.getItem('cb_unread_count') || '0', 10);
+    let isHistoryLoading = false;
+
+    function playNotificationSound() {
+        try {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = context.createOscillator();
+            const gain = context.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, context.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(440, context.currentTime + 0.1);
+
+            gain.gain.setValueAtTime(0.1, context.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.1);
+
+            osc.connect(gain);
+            gain.connect(context.destination);
+
+            osc.start();
+            osc.stop(context.currentTime + 0.1);
+        } catch (e) {
+            chat_clog('Audio notification failed:', e);
+        }
+    }
+
+    function updateCounter() {
+        const counterEl = $('#codeness-chatbot-counter');
+        if (unreadCount > 0) {
+            counterEl.text(unreadCount).show();
+        } else {
+            counterEl.hide().text('0');
+        }
+        sessionStorage.setItem('cb_unread_count', unreadCount);
+    }
+
+    // Initialize counter UI
+    // Need to wait until toggle counter element exists if we refer to it.
+    // Since this is inside .ready(), it's fine.
+    updateCounter();
 
     // Generate a unique session ID for this visitor (persisted via sessionStorage)
     function getSessionId() {
@@ -44,6 +84,9 @@ jQuery(document).ready(function ($) {
             'transform': 'translateY(0) scale(1)',
             'transition': 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out'
         });
+        // Reset counter when opened
+        unreadCount = 0;
+        updateCounter();
     }
 
     function hideChatbot() {
@@ -283,6 +326,12 @@ jQuery(document).ready(function ($) {
             </div>
         `);
         scrollToBottom();
+
+        if (chatbot.hasClass('collapsed') && !isHistoryLoading) {
+            unreadCount++;
+            updateCounter();
+            playNotificationSound();
+        }
     }
 
     // ===== WebSocket (Pusher/Reverb) for Live Chat Messages =====
@@ -751,6 +800,13 @@ jQuery(document).ready(function ($) {
                     }
                     scrollToBottom();
 
+                    // If bot replied while minimized (unlikely during active chat but possible if they minimize fast)
+                    if (chatbot.hasClass('collapsed')) {
+                        unreadCount++;
+                        updateCounter();
+                        playNotificationSound();
+                    }
+
                     // If live chat is true AND live chat is enabled in settings, switch to live chat
                     if (shouldHandoff) {
                         if (parsedResponse?.response?.chat_id) {
@@ -952,6 +1008,7 @@ jQuery(document).ready(function ($) {
     // ===== Load existing messages on init =====
     function loadExistingMessages() {
         const sessionId = getSessionId();
+        isHistoryLoading = true;
 
         $.ajax({
             url: chatbotAjax.ajaxurl,
@@ -967,6 +1024,7 @@ jQuery(document).ready(function ($) {
                     if (parsed.error) {
                         // "Chat not found" or other error — no existing session, stay in AI mode
                         chat_clog('[LiveChat] No existing chat found:', parsed.error);
+                        isHistoryLoading = false;
                         return;
                     }
 
@@ -1039,6 +1097,7 @@ jQuery(document).ready(function ($) {
                             appendSystemMessage('Your previous chat was resolved.');
                             chat_clog('[LiveChat] Chat was resolved, staying in AI mode');
                             showRatingUI(liveChatId);
+                            isHistoryLoading = false;
                             return;
                         }
 
@@ -1052,10 +1111,13 @@ jQuery(document).ready(function ($) {
                     }
                 } catch (e) {
                     console.error('[LiveChat] Error parsing get-messages response:', e);
+                } finally {
+                    isHistoryLoading = false;
                 }
             },
             error: function (xhr, status, error) {
                 console.error('[LiveChat] Error loading messages:', status, error);
+                isHistoryLoading = false;
             }
         });
     }

@@ -34,6 +34,7 @@
 
 <div id="codeness-chatbot-toggle">
     <img src="<?php echo plugin_dir_url(__FILE__); ?>icon.png" alt="Chatbot Icon" id="bot-image">
+    <span id="codeness-chatbot-counter" style="display:none;">0</span>
 </div>
 
 <div id="form-modal" class="modal">
