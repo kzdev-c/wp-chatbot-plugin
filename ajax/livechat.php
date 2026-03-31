@@ -30,8 +30,16 @@ function chatbot_livechat_get_messages()
     include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-get-messages.php';
 }
 
+function chatbot_livechat_send_ai_history()
+{
+    include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-send-ai-history.php';
+}
+
 add_action('wp_ajax_livechat_send_message', 'chatbot_livechat_send');
 add_action('wp_ajax_nopriv_livechat_send_message', 'chatbot_livechat_send');
+
+add_action('wp_ajax_livechat_send_ai_history', 'chatbot_livechat_send_ai_history');
+add_action('wp_ajax_nopriv_livechat_send_ai_history', 'chatbot_livechat_send_ai_history');
 
 add_action('wp_ajax_livechat_typing', 'chatbot_livechat_typing');
 add_action('wp_ajax_nopriv_livechat_typing', 'chatbot_livechat_typing');

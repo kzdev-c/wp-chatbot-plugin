@@ -168,6 +168,46 @@ jQuery(document).ready(function ($) {
         // Show a system message (only if not resuming from history)
         if (!silent) {
             appendSystemMessage("You're now chatting with a live agent. Let us know how we can help!");
+            
+            let conversations = [];
+            $('#codeness-chatbot-messages .chatbot-message').each(function() {
+                // Skip system and loading messages, or prompt buttons
+                if ($(this).hasClass('system-message') || $(this).hasClass('loading-message') || $(this).find('.prompt-buttons').length > 0) {
+                    return;
+                }
+                
+                // Agent messages shouldn't be here since it's a new session, but just in case
+                if ($(this).hasClass('agent-message')) {
+                    return;
+                }
+
+                let text = $(this).find('.message-content').text().trim();
+                if (!text) return; // skip empty
+
+                let sender = $(this).hasClass('user-message') ? 'visitor' : 'aibot';
+                conversations.push({
+                    sender: sender,
+                    message: text
+                });
+            });
+
+            if (conversations.length > 0) {
+                $.ajax({
+                    url: chatbotAjax.ajaxurl,
+                    method: 'POST',
+                    data: {
+                        action: 'livechat_send_ai_history',
+                        session_id: liveChatSessionId,
+                        conversations: conversations
+                    },
+                    success: function() {
+                        chat_clog('[LiveChat] AI history sent successfully.');
+                    },
+                    error: function() {
+                        chat_clog('[LiveChat] Failed to send AI history.');
+                    }
+                });
+            }
         }
 
         // Start WebSocket listener for agent messages
