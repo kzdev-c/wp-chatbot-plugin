@@ -15,6 +15,7 @@ jQuery(document).ready(function ($) {
     let liveChatSessionId = null;
     let liveChatId = null;
     let lastMessageId = 0;
+    let agentId = null;
 
     let typingThrottleTime = 0;
     let notTypingTimeout = null;
@@ -241,7 +242,8 @@ jQuery(document).ready(function ($) {
                     data: {
                         action: 'livechat_send_ai_history',
                         session_id: liveChatSessionId,
-                        conversations: conversations
+                        conversations: conversations,
+                        agent_id: agentId
                     },
                     success: function() {
                         chat_clog('[LiveChat] AI history sent successfully.');
@@ -811,6 +813,9 @@ jQuery(document).ready(function ($) {
                     if (shouldHandoff) {
                         if (parsedResponse?.response?.chat_id) {
                             liveChatId = parsedResponse.response.chat_id;
+                        }
+                        if (parsedResponse?.response?.agent_id) {
+                            agentId = parsedResponse.response.agent_id;
                         }
                         enterLiveChatMode();
                     }

@@ -42,6 +42,10 @@ $post_data = [
     'conversations' => $conversations,
 ];
 
+if (isset($_POST['agent_id']) && !empty($_POST['agent_id'])) {
+    $post_data['agent_id'] = intval($_POST['agent_id']);
+}
+
 // DEBUG: Log request details
 error_log('[LiveChat DEBUG] URL: ' . $api_url);
 error_log('[LiveChat DEBUG] Post Data: ' . json_encode($post_data));
