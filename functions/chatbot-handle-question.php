@@ -1,60 +1,20 @@
 <?php
 $question = sanitize_text_field($_POST['question']);
 
-$username = get_option('chatbot_username');
-$token    = get_option('chatbot_token');
-$module   = get_option('preferred_module');
-$file   = get_option('file_name');
+$token = get_option('chatbot_token');
 
 $ai_chat_enabled = '1';
 
-if (empty($username) || empty($token) || empty($question) || empty($module)) {
-    echo json_encode(['error' => 'Invalid configration settings.']);
+if (empty($question)) {
+    echo json_encode(['error' => 'Question is required.']);
     wp_die();
 }
 
-// Determine the API endpoint and form data based on the preferred module
-switch ($module) {
-    case 'web_scrapper':
-        $api_url = CHATBOT_API_BASE_URL . '/web_scraper/ask';
-        $post_data = [
-            'question'   => $question,
-            'username'   => $username,
-            'token'      => $token,
-            'session_id' => isset($_COOKIE['cb_user_session']) ? sanitize_text_field(stripslashes($_COOKIE['cb_user_session'])) : null,
-            'location'   => (isset($_COOKIE['cb_user_location']) && $_COOKIE['cb_user_location'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_location'])) : null,
-            'device'     => (isset($_COOKIE['cb_user_agent']) && $_COOKIE['cb_user_agent'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_agent'])) : null,
-        ];
-        break;
-
-    case 'file_upload':
-        if (empty($file)) {
-            echo json_encode(['error' => 'File name is not configured. Please set it in Chatbot Settings.']);
-            wp_die();
-        }
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-        // Get the current session ID
-
-        $visitor_id = session_id();
-        $api_url = CHATBOT_API_BASE_URL . '/file_chatbot/ask';
-        $post_data = [
-            'username'   => $username,
-            'token'      => $token,
-            'question'   => $question,
-            'file_name'  => $file,
-            'visitor_id' => $visitor_id,
-            'session_id' => isset($_COOKIE['cb_user_session']) ? sanitize_text_field(stripslashes($_COOKIE['cb_user_session'])) : null,
-            'location'   => (isset($_COOKIE['cb_user_location']) && $_COOKIE['cb_user_location'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_location'])) : null,
-            'device'     => (isset($_COOKIE['cb_user_agent']) && $_COOKIE['cb_user_agent'] !== 'not provided') ? sanitize_text_field(stripslashes($_COOKIE['cb_user_agent'])) : null,
-        ];
-        break;
-
-    default:
-        echo json_encode(['error' => 'No module Was selected. Please Check your settings.']);
-        wp_die();
-}
+// Single endpoint — only sends the question
+$api_url   = CHATBOT_API_BASE_URL . '/query_file';
+$post_data = [
+    'question' => $question,
+];
 
 if (!$ai_chat_enabled) {
     echo json_encode([
@@ -102,7 +62,7 @@ if ($response === false) {
     if (isset($decoded_response['error'])) {
         echo json_encode(['error' => 'Error from API: ' . $decoded_response['error']]);
     } else {
-        if ($ai_chat_enabled && isset($decoded_response['livechat']) && ($decoded_response['livechat'] === true || $decoded_response['livechat'] === 'true' || $decoded_response['livechat'] == 1)) {
+        if ($ai_chat_enabled && isset($decoded_response['request_agent']) && $decoded_response['request_agent'] === true) {
             $base_url  = defined('CHATBOT_DASHBOARD_API_BASE_URL') ? CHATBOT_DASHBOARD_API_BASE_URL : 'https://chatbot-dashboard.local';
             $check_url = rtrim($base_url, '/') . '/api/livechat/check-agent-availability';
             
