@@ -51,6 +51,10 @@ if ($response_data && isset($response_data['valid'])) {
         $result['html'] = '<div class="notice notice-success is-dismissible"><p>Credentials are correct and settings saved.</p></div>';
         update_option('chatbot_username', $username);
         update_option('chatbot_token', $token);
+
+        // Save ai_chat_enabled dynamically based on the current user+token
+        $ai_chat_enabled_value = (isset($response_data['ai_chat_enabled']) && $response_data['ai_chat_enabled']) ? '1' : '0';
+        update_option('ai_chat_enabled_' . $username . '_' . $token, $ai_chat_enabled_value);
     } elseif ($response_data['valid'] == 0) {
         $result['html'] = '<div class="notice notice-error is-dismissible"><p>Invalid credentials. Please check your username and token.</p></div>';
     }
