@@ -451,13 +451,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(15, 15, 30, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  background-color: rgba(15, 15, 30, 0.75);
   z-index: 9999999;
   justify-content: center;
   align-items: center;
-  animation: modalOverlayIn 0.3s ease;
+  animation: modalOverlayIn 0.15s ease-out forwards;
 }
 
 @keyframes modalOverlayIn {
@@ -479,13 +477,13 @@
   width: 90%;
   box-sizing: border-box;
   position: relative;
-  animation: modalContentIn 0.4s var(--chat-transition);
+  animation: modalContentIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @keyframes modalContentIn {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
+    transform: translateY(10px) scale(0.95);
   }
 
   to {
@@ -753,7 +751,7 @@
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
@@ -774,10 +772,6 @@
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
 }
 
-#codeness-chatbot.livechat-active #codeness-chatbot-end-chat {
-  display: flex;
-}
-
 /* ===== Close Chat Confirmation Dialog ===== */
 .chat-dialog-overlay {
   display: none;
@@ -786,9 +780,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(15, 15, 30, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 15, 30, 0.75);
   z-index: 99999999;
   justify-content: center;
   align-items: center;
@@ -796,7 +788,7 @@
 
 .chat-dialog-overlay.show {
   display: flex;
-  animation: dialogOverlayIn 0.25s ease forwards;
+  animation: dialogOverlayIn 0.15s ease-out forwards;
 }
 
 @keyframes dialogOverlayIn {
@@ -817,13 +809,13 @@
   width: 90%;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.04);
   text-align: center;
-  animation: dialogBoxIn 0.35s var(--chat-transition) forwards;
+  animation: dialogBoxIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @keyframes dialogBoxIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.92);
+    transform: translateY(10px) scale(0.95);
   }
 
   to {
@@ -836,17 +828,17 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background: var(--chat-user-bubble, #fee2e2);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 20px auto;
-  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.25);
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.15);
 }
 
 .chat-dialog-icon i {
   font-size: 22px;
-  color: #d97706;
+  color: var(--chat-primary, #ef4444);
 }
 
 .chat-dialog-title {
@@ -965,9 +957,9 @@
 }
 
 .chat-dialog-btn-confirm {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-  color: white;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+  background: var(--chat-primary-gradient, linear-gradient(135deg, #ef4444 0%, #dc2626 100%));
+  color: var(--chat-bot-text, #1a1d26);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
 }
 
 .chat-dialog-btn-confirm:hover {

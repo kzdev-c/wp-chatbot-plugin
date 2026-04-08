@@ -76,7 +76,7 @@ $_bot_name   = !empty($_appearance['bot_display_name']) ? $_appearance['bot_disp
         <div class="chat-dialog-icon">
             <i class="fas fa-exclamation-triangle"></i>
         </div>
-        <h3 class="chat-dialog-title">End Live Chat?</h3>
+        <h3 class="chat-dialog-title">End Conversation?</h3>
         <p class="chat-dialog-text">Are you sure you want to close this conversation? This action cannot be undone.</p>
         <div class="chat-dialog-actions">
             <button id="close-chat-cancel" class="chat-dialog-btn chat-dialog-btn-cancel">Cancel</button>

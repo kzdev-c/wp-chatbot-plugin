@@ -4,7 +4,7 @@
     <!-- Page Header -->
     <div class="settings-page-header">
         <div>
-            <h1><span class="dashicons dashicons-admin-generic" style="margin-right:8px;font-size:26px;line-height:1.3;"></span>Chatbot Settings</h1>
+            <h1 style="display:flex; align-items:center; gap:8px;"><span class="dashicons dashicons-admin-generic" style="font-size:32px; width:32px; height:32px; line-height:32px;"></span> Chatbot Settings</h1>
             <p class="settings-page-subtitle">Configure credentials, chat mode, and connection settings.</p>
         </div>
     </div>
@@ -55,17 +55,13 @@
                 </div>
                 <div class="settings-card-body">
                     <div class="settings-field-row-2">
-                        <div class="settings-field">
+                        <div class="settings-field" style="width: 100%;">
                             <label for="preferred-module">Preferred Module</label>
                             <select id="preferred-module" name="preferred_module">
                                 <option disabled>Select Module</option>
                                 <option value="web_scrapper" <?php if (get_option('preferred_module') == 'web_scrapper') echo 'selected'; ?>>Web Scrapper</option>
                                 <option value="file_upload" <?php if (get_option('preferred_module') == 'file_upload') echo 'selected'; ?>>File Upload</option>
                             </select>
-                        </div>
-                        <div class="settings-field">
-                            <label for="chatbot_name">Chatbot Name</label>
-                            <input type="text" id="chatbot_name" name="chatbot_name" value="<?php echo esc_attr(get_option('chatbot_name')); ?>" placeholder="Chat Assistant" />
                         </div>
                     </div>
                     <div id="check-files-container" style="display:none;">

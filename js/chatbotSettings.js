@@ -136,8 +136,7 @@ jQuery(document).ready(function ($) {
             type: 'POST',
             data: {
                 action: 'chatbot_settings',
-                preferred_module: preferredModuleSelect.val(),
-                chatbot_name: $('#chatbot_name').val()
+                preferred_module: preferredModuleSelect.val()
             },
             success: function () {
                 showToast('General settings saved!', 'success');

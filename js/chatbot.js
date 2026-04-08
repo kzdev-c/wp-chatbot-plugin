@@ -60,8 +60,6 @@ jQuery(document).ready(function ($) {
     }
 
     // Initialize counter UI
-    // Need to wait until toggle counter element exists if we refer to it.
-    // Since this is inside .ready(), it's fine.
     updateCounter();
 
     // Generate a unique session ID for this visitor (persisted via sessionStorage)
@@ -76,6 +74,34 @@ jQuery(document).ready(function ($) {
         }
         return sid;
     }
+
+    // ===== Local Persistence =====
+    function saveChatHistory() {
+        const sid = getSessionId();
+        if (!sid) return;
+        // Clone to strip out temporary UI elements
+        let tempContainer = messagesContainer.clone();
+        tempContainer.find('.loading-message, #agent-typing-indicator, #chat-rating-box').remove();
+        localStorage.setItem('cb_history_' + sid, tempContainer.html());
+    }
+
+    function restoreChatHistory() {
+        const sid = getSessionId();
+        if (!sid) return;
+        const savedHtml = localStorage.getItem('cb_history_' + sid);
+        if (savedHtml && savedHtml.trim() !== '') {
+            messagesContainer.html(savedHtml);
+            scrollToBottom();
+        }
+    }
+
+    // Automatically save history when DOM changes
+    const config = { childList: true, subtree: true, characterData: true };
+    const observer = new MutationObserver(() => saveChatHistory());
+    observer.observe(messagesContainer[0], config);
+
+    // Restore immediately on load
+    restoreChatHistory();
 
     function scrollToBottom() {
         messagesContainer.stop().animate({
@@ -545,6 +571,15 @@ jQuery(document).ready(function ($) {
 
     // ===== End Chat Button + Confirmation Dialog =====
     endChatButton.on('click', function () {
+        if (liveChatId && isLiveChatMode) {
+            $('.chat-dialog-title').text('End Live Chat?');
+            $('.chat-dialog-text').text('Are you sure you want to end this live chat session? This cannot be undone.');
+            $('#close-chat-confirm').text('End Chat');
+        } else {
+            $('.chat-dialog-title').text('Start New Session?');
+            $('.chat-dialog-text').text('This will clear your current conversation history. Are you sure?');
+            $('#close-chat-confirm').text('Clear Chat');
+        }
         closeChatDialog.addClass('show');
     });
 
@@ -554,7 +589,23 @@ jQuery(document).ready(function ($) {
 
     $('#close-chat-confirm').on('click', function () {
         closeChatDialog.removeClass('show');
-        closeLiveChat();
+        
+        if (liveChatId && isLiveChatMode) {
+            closeLiveChat();
+        } else {
+            // It's an AI chat session. Wipe local history and start fresh.
+            var sid = getSessionId();
+            localStorage.removeItem('cb_history_' + sid);
+            sessionStorage.removeItem('chatbot_livechat_session_id');
+            document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            
+            // Clear UI immediately without reloading
+            observer.disconnect();
+            messagesContainer.empty();
+            appendSystemMessage("Started a new conversation.");
+            observer.observe(messagesContainer[0], config);
+            saveChatHistory();
+        }
     });
 
     // Close dialog when clicking overlay background
@@ -617,9 +668,23 @@ jQuery(document).ready(function ($) {
                 </div>
                 <p class="cr-success-title">Thanks for rating!</p>
                 <p class="cr-success-sub" id="cr-success-detail"></p>
+                <button id="start-new-chat-btn" style="margin-top:12px;padding:8px 16px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;width:100%;">Start New Session</button>
             </div>
         </div>
     `);
+
+        // Handle start new chat
+        messagesContainer.off('click', '#start-new-chat-btn').on('click', '#start-new-chat-btn', function() {
+            // Delete the session ID and cookies so a fresh one is made
+            var sid = getSessionId();
+            localStorage.removeItem('cb_history_' + sid);
+            sessionStorage.removeItem('chatbot_livechat_session_id');
+            document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            
+            // Clear UI immediately and force reload
+            messagesContainer.empty();
+            window.location.reload();
+        });
 
         scrollToBottom();
 
@@ -1039,6 +1104,13 @@ jQuery(document).ready(function ($) {
                     }
 
                     if (parsed.success) {
+                        // If backend returns messages, clear restored local history to prevent duplication
+                        if ((parsed.ai_messages && parsed.ai_messages.length > 0) || (parsed.messages && parsed.messages.length > 0)) {
+                            // Turn off observer temporarily while rebuilding from backend
+                            observer.disconnect();
+                            messagesContainer.empty();
+                        }
+
                         // Render ai_messages first
                         if (parsed.ai_messages && parsed.ai_messages.length > 0) {
                             chat_clog('[LiveChat] Loading', parsed.ai_messages.length, 'existing AI messages');
@@ -1117,6 +1189,10 @@ jQuery(document).ready(function ($) {
                         // This happens as long as success is true and we loaded either ai or normal messages
                         if ((parsed.ai_messages && parsed.ai_messages.length > 0) || (parsed.messages && parsed.messages.length > 0)) {
                             enterLiveChatMode(true);
+                            
+                            // Re-enable observer and force a save now that rebuild is done
+                            observer.observe(messagesContainer[0], config);
+                            saveChatHistory();
                         }
                     }
                 } catch (e) {
