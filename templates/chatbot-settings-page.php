@@ -29,7 +29,7 @@
                         // ==========================================
                         // PRESET CHAT MODE
                         // ==========================================
-                        $chat_mode = 'livechat_only'; 
+                        $chat_mode = 'both'; 
                         ?>
                         <label class="chat-mode-option <?php echo $chat_mode === 'ai_only' ? 'active' : ''; ?>" for="chat-mode-ai">
                             <input type="radio" name="chat_mode" id="chat-mode-ai" value="ai_only" <?php checked($chat_mode, 'ai_only'); ?> />

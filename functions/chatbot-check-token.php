@@ -2,7 +2,7 @@
 
 $username           = sanitize_text_field($_POST['username']);
 $token              = sanitize_text_field($_POST['token']);
-
+$livechat_secret_key  = null;
 // Save dashboard URL if provided (ensures constant stays in sync)
 if (!empty($_POST['chatbot_dashboard_url'])) {
     $dashboard_url = esc_url_raw($_POST['chatbot_dashboard_url']);
@@ -13,6 +13,7 @@ if (!empty($_POST['chatbot_dashboard_url'])) {
 
 if (isset($_POST['livechat_secret_key'])) {
     update_option('livechat_secret_key', sanitize_text_field($_POST['livechat_secret_key']));
+    $livechat_secret_key  = sanitize_text_field($_POST['livechat_secret_key']);
 }
 
 $api_base = rtrim($dashboard_url, '/');
@@ -32,6 +33,7 @@ curl_setopt_array($curl, [
     CURLOPT_POSTFIELDS => json_encode([
         'username' => $username,
         'token'    => $token,
+        'livechat_secret_key' => $livechat_secret_key
     ]),
     CURLOPT_HTTPHEADER     => [
         'Content-Type: application/json',
@@ -48,17 +50,26 @@ $result = [
 ];
 
 if ($response_data && isset($response_data['valid'])) {
-    
+
     // Check and save has_livechat
-    $has_livechat = (isset($response_data['has_livechat']) && $response_data['has_livechat']) ? '1' : '0';
+    $has_livechat = !empty($response_data['has_livechat']) ? '1' : '0';
+    $livechat_secret_key_valid = !empty($response_data['livechat_secret_key_valid']) ? '1' : '0';
+
+    // Always update this
     update_option('has_livechat', $has_livechat);
-    
-    if ($has_livechat === '0') {
+
+    // Clear secret key if livechat is disabled OR key is invalid
+    if ($has_livechat === '0' || $livechat_secret_key_valid === '0') {
         update_option('livechat_secret_key', '');
+    }
+
+    // Disable AI chat if livechat is disabled
+    if ($has_livechat === '0') {
         update_option('ai_chat_enabled', '0');
     }
-    
+
     $result['has_livechat'] = ($has_livechat === '1');
+    $result['livechat_secret_key_valid'] = ($livechat_secret_key_valid === '1');
 
     if ($response_data['valid'] == 1) {
         $result['success'] = true;
