@@ -17,15 +17,24 @@
         <!-- ─── Left Column ─── -->
         <div class="settings-col-main">
 
-            <!-- Card: Chat Mode -->
-            <div class="settings-card">
+            <!-- Card: Chat Mode (Hidden per user request, hardcoded via variable below) -->
+            <div class="settings-card" style="display: none;">
                 <div class="settings-card-header">
                     <h2><span class="dashicons dashicons-format-chat"></span> Chat Mode</h2>
                 </div>
                 <div class="settings-card-body">
                     <p class="settings-card-desc">Choose how the chatbot operates for your visitors.</p>
                     <div class="chat-mode-options">
-                        <?php $chat_mode = get_option('chatbot_chat_mode', 'ai_only'); ?>
+                        <?php 
+                        // ==========================================
+                        // HARDCODED CHAT MODE TOGGLE
+                        // ==========================================
+                        // Change this value to 'ai_only', 'livechat_only', or 'both'
+                        $chat_mode = 'both'; 
+                        
+                        // Force update the option so the frontend automatically inherits this mode
+                        update_option('chatbot_chat_mode', $chat_mode);
+                        ?>
                         <label class="chat-mode-option <?php echo $chat_mode === 'ai_only' ? 'active' : ''; ?>" for="chat-mode-ai">
                             <input type="radio" name="chat_mode" id="chat-mode-ai" value="ai_only" <?php checked($chat_mode, 'ai_only'); ?> />
                             <span class="chat-mode-icon"><span class="dashicons dashicons-welcome-learn-more"></span></span>
@@ -79,25 +88,7 @@
                 </div>
             </div>
 
-            <!-- Card: Live Chat Connection (shown when mode includes livechat) -->
-            <div class="settings-card" id="livechat-settings-card" style="<?php echo ($chat_mode === 'ai_only') ? 'display:none;' : ''; ?>">
-                <div class="settings-card-header">
-                    <h2><span class="dashicons dashicons-admin-links"></span> Live Chat Connection</h2>
-                </div>
-                <div class="settings-card-body">
-                    <div class="settings-field">
-                        <label for="livechat_secret_key">Secret Key</label>
-                        <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>" placeholder="••••••••" />
-                    </div>
-                    <div id="livechat-section-response" class="settings-response"></div>
 
-                    <div class="settings-save-row">
-                        <button type="button" class="settings-btn settings-btn-primary" id="save-livechat-btn">
-                            <span class="dashicons dashicons-saved"></span> Save Live Chat Settings
-                        </button>
-                    </div>
-                </div>
-            </div>
 
         </div>
 
@@ -120,6 +111,10 @@
                     <div class="settings-field">
                         <label for="token">Token</label>
                         <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required placeholder="••••••••" />
+                    </div>
+                    <div class="settings-field" id="livechat-key-container" style="<?php echo ($chat_mode === 'ai_only') ? 'display:none;' : ''; ?>">
+                        <label for="livechat_secret_key">Live Chat Secret Key</label>
+                        <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>" placeholder="••••••••" />
                     </div>
                     <div id="chatbot-response" class="settings-response"></div>
                     <button type="button" class="settings-btn settings-btn-primary" id="submit-btn" style="width:100%">

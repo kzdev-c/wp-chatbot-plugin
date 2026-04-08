@@ -11,6 +11,10 @@ if (!empty($_POST['chatbot_dashboard_url'])) {
     $dashboard_url = defined('CHATBOT_DASHBOARD_API_BASE_URL') ? CHATBOT_DASHBOARD_API_BASE_URL : get_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local');
 }
 
+if (isset($_POST['livechat_secret_key'])) {
+    update_option('livechat_secret_key', sanitize_text_field($_POST['livechat_secret_key']));
+}
+
 $api_base = rtrim($dashboard_url, '/');
 
 $curl = curl_init();

@@ -27,11 +27,11 @@ jQuery(document).ready(function ($) {
         $('.chat-mode-option').removeClass('active');
         $(this).closest('.chat-mode-option').addClass('active');
 
-        // Show/hide live chat card
+        // Show/hide live chat key container
         if (mode === 'ai_only') {
-            $('#livechat-settings-card').slideUp(250);
+            $('#livechat-key-container').slideUp(250);
         } else {
-            $('#livechat-settings-card').slideDown(250);
+            $('#livechat-key-container').slideDown(250);
         }
 
         // Save immediately
@@ -96,7 +96,8 @@ jQuery(document).ready(function ($) {
                 action: 'check_token',
                 token: tokenInput.val(),
                 username: usernameInput.val(),
-                chatbot_dashboard_url: $('#chatbot_dashboard_url').val()
+                chatbot_dashboard_url: $('#chatbot_dashboard_url').val(),
+                livechat_secret_key: $('#livechat_secret_key').val()
             },
             success: function (response) {
                 try {
@@ -159,11 +160,12 @@ jQuery(document).ready(function ($) {
         $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Checking…');
 
         $.ajax({
-            url: checkFilesAjax.ajaxurl,
+            url: checkCredentialsAjax.ajaxurl,
             type: 'POST',
             data: { action: 'chatbot_check_files' },
             success: function (response) {
-                showToast(response || 'Files checked.', 'success');
+                $('#module-response').html(response).show();
+                showToast('File check completed.', 'success');
             },
             error: function (jqXHR, textStatus) {
                 showToast('Error checking files: ' + textStatus, 'error');
