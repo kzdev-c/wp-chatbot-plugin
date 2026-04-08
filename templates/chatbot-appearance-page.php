@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Chatbot Appearance Settings Page Template
  * Renders the admin UI for customizing colors, typography, bot identity, and provides
@@ -11,7 +12,7 @@ if (!defined('ABSPATH')) exit;
     <!-- ===== Page Header ===== -->
     <div class="appearance-page-header">
         <div class="appearance-page-header-left">
-            <h1 style="display:flex; align-items:center; gap:8px;"><span class="dashicons dashicons-art" style="font-size:32px; width:32px; height:32px; line-height:32px;"></span> Appearance Settings</h1>
+            <h1><span class="dashicons dashicons-art"></span> Appearance Settings</h1>
             <p class="appearance-page-subtitle">Customize the chatbot's look, colors, typography, and identity. Changes apply instantly.</p>
         </div>
         <div class="appearance-page-header-actions">
@@ -49,7 +50,7 @@ if (!defined('ABSPATH')) exit;
                         <input type="text" id="app-bot-name" data-key="bot_display_name" placeholder="Chat Assistant" maxlength="50" />
                         <small class="appearance-field-hint">Shown in the chatbot header and as the bot message label. Max 50 chars.</small>
                     </div>
-                    <div class="appearance-field" style="margin-top:16px;">
+                    <div class="appearance-field" style="margin-top:12px;">
                         <label>Bot Avatar / Icon</label>
                         <div class="appearance-avatar-row">
                             <div class="appearance-avatar-preview" id="appearance-avatar-preview">
@@ -76,7 +77,8 @@ if (!defined('ABSPATH')) exit;
                     <span class="dashicons dashicons-arrow-down-alt2 appearance-card-toggle"></span>
                 </div>
                 <div class="appearance-card-body" id="appearance-card-fonts">
-                    <div class="appearance-field-row">
+                    <!-- Global: Font Family & Letter Spacing -->
+                    <div class="appearance-field-row appearance-field-row-2">
                         <div class="appearance-field">
                             <label for="app-font-family">Font Family</label>
                             <select id="app-font-family" data-key="font_family">
@@ -91,25 +93,60 @@ if (!defined('ABSPATH')) exit;
                                 <option value="system-ui, sans-serif">System UI</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="appearance-field-row appearance-field-row-3">
                         <div class="appearance-field">
-                            <label for="app-font-size">Size (px)</label>
-                            <input type="number" id="app-font-size" min="10" max="28" step="1" data-key="font_size" value="14" />
+                            <label for="app-letter-spacing">Letter Spacing (px)</label>
+                            <input type="number" id="app-letter-spacing" min="-2" max="5" step="0.1" data-key="letter_spacing" value="0" />
                         </div>
-                        <div class="appearance-field">
-                            <label for="app-font-weight">Weight</label>
-                            <select id="app-font-weight" data-key="font_weight">
-                                <option value="300">Light (300)</option>
-                                <option value="400">Regular (400)</option>
-                                <option value="500">Medium (500)</option>
-                                <option value="600">Semi-Bold (600)</option>
-                                <option value="700">Bold (700)</option>
+                    </div>
+
+                    <hr class="appearance-divider" />
+
+                    <!-- Per-part Typography Table -->
+                    <div class="appearance-typo-table">
+                        <div class="appearance-typo-table-head">
+                            <span></span>
+                            <span>Size (px)</span>
+                            <span>Weight</span>
+                        </div>
+                        <div class="appearance-typo-table-row">
+                            <span class="appearance-typo-row-label">Header</span>
+                            <input type="number" id="app-header-font-size" min="10" max="28" step="1" data-key="header_font_size" value="15" />
+                            <select id="app-header-font-weight" data-key="header_font_weight">
+                                <option value="400">Regular</option>
+                                <option value="500">Medium</option>
+                                <option value="600" selected>Semi-Bold</option>
+                                <option value="700">Bold</option>
                             </select>
                         </div>
-                        <div class="appearance-field">
-                            <label for="app-letter-spacing">Spacing (px)</label>
-                            <input type="number" id="app-letter-spacing" min="-2" max="5" step="0.1" data-key="letter_spacing" value="0" />
+                        <div class="appearance-typo-table-row">
+                            <span class="appearance-typo-row-label">Bot Messages</span>
+                            <input type="number" id="app-bot-font-size" min="10" max="28" step="1" data-key="bot_font_size" value="14" />
+                            <select id="app-bot-font-weight" data-key="bot_font_weight">
+                                <option value="300">Light</option>
+                                <option value="400" selected>Regular</option>
+                                <option value="500">Medium</option>
+                                <option value="600">Semi-Bold</option>
+                            </select>
+                        </div>
+                        <div class="appearance-typo-table-row">
+                            <span class="appearance-typo-row-label">User Messages</span>
+                            <input type="number" id="app-user-font-size" min="10" max="28" step="1" data-key="user_font_size" value="14" />
+                            <select id="app-user-font-weight" data-key="user_font_weight">
+                                <option value="300">Light</option>
+                                <option value="400" selected>Regular</option>
+                                <option value="500">Medium</option>
+                                <option value="600">Semi-Bold</option>
+                            </select>
+                        </div>
+                        <div class="appearance-typo-table-row">
+                            <span class="appearance-typo-row-label">Input Area</span>
+                            <input type="number" id="app-input-font-size" min="10" max="28" step="1" data-key="input_font_size" value="13" />
+                            <select id="app-input-font-weight" data-key="input_font_weight">
+                                <option value="300">Light</option>
+                                <option value="400" selected>Regular</option>
+                                <option value="500">Medium</option>
+                                <option value="600">Semi-Bold</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -122,12 +159,29 @@ if (!defined('ABSPATH')) exit;
                     <span class="dashicons dashicons-arrow-down-alt2 appearance-card-toggle"></span>
                 </div>
                 <div class="appearance-card-body" id="appearance-card-colors">
+                    <!-- Color Mode Toggle -->
+                    <div class="appearance-color-mode-toggle">
+                        <span class="appearance-color-mode-label">Color Mode</span>
+                        <div class="appearance-toggle-pills" id="color-mode-pills">
+                            <button type="button" class="appearance-pill active" data-mode="solid">Solid</button>
+                            <button type="button" class="appearance-pill" data-mode="gradient">Gradient</button>
+                        </div>
+                        <input type="hidden" id="app-color-mode" data-key="color_mode" value="solid" />
+                    </div>
                     <div class="appearance-color-grid">
                         <div class="appearance-color-field">
                             <label for="app-color-primary">Primary</label>
                             <div class="appearance-color-input-wrap">
                                 <input type="color" id="app-color-primary" data-key="color_primary" />
                                 <input type="text" class="appearance-color-hex" data-linked="app-color-primary" maxlength="7" />
+                            </div>
+                        </div>
+
+                        <div class="appearance-color-field">
+                            <label for="app-color-accent">Accent</label>
+                            <div class="appearance-color-input-wrap">
+                                <input type="color" id="app-color-accent" data-key="color_accent" />
+                                <input type="text" class="appearance-color-hex" data-linked="app-color-accent" maxlength="7" />
                             </div>
                         </div>
                         <div class="appearance-color-field">
@@ -144,13 +198,7 @@ if (!defined('ABSPATH')) exit;
                                 <input type="text" class="appearance-color-hex" data-linked="app-color-background" maxlength="7" />
                             </div>
                         </div>
-                        <div class="appearance-color-field">
-                            <label for="app-color-accent">Accent</label>
-                            <div class="appearance-color-input-wrap">
-                                <input type="color" id="app-color-accent" data-key="color_accent" />
-                                <input type="text" class="appearance-color-hex" data-linked="app-color-accent" maxlength="7" />
-                            </div>
-                        </div>
+
                         <div class="appearance-color-field">
                             <label for="app-messages-bg">Messages BG</label>
                             <div class="appearance-color-input-wrap">
@@ -245,7 +293,9 @@ if (!defined('ABSPATH')) exit;
                         <div class="preview-input-area" id="preview-input-area">
                             <div class="preview-input-field">Type your message...</div>
                             <div class="preview-send-btn" id="preview-send-btn">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                                </svg>
                             </div>
                         </div>
                     </div>

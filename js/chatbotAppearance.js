@@ -14,13 +14,20 @@ jQuery(document).ready(function ($) {
         color_secondary:    '#a81b21',
         color_background:   '#ffffff',
         color_accent:       '#e8555b',
+        color_mode:         'solid',
         text_user_message:  '#1a1d26',
         text_bot_message:   '#ffffff',
         text_ui:            '#6b7280',
         font_family:        "'Inter', sans-serif",
-        font_size:          '14',
-        font_weight:        '400',
         letter_spacing:     '0',
+        header_font_size:   '15',
+        header_font_weight: '600',
+        bot_font_size:      '14',
+        bot_font_weight:    '400',
+        user_font_size:     '14',
+        user_font_weight:   '400',
+        input_font_size:    '13',
+        input_font_weight:  '400',
         bot_display_name:   'Chat Assistant',
         bot_avatar_url:     '',
         messages_bg:        '#f7f8fc',
@@ -89,13 +96,19 @@ jQuery(document).ready(function ($) {
             }
         });
 
-
-
         // Hidden fields
         $('input[type="hidden"][data-key]').each(function () {
             var key = $(this).data('key');
             if (s[key] !== undefined) $(this).val(s[key]);
         });
+
+        // Color mode pills
+        var mode = s.color_mode || 'solid';
+        $('#color-mode-pills .appearance-pill').removeClass('active');
+        $('#color-mode-pills .appearance-pill[data-mode="' + mode + '"]').addClass('active');
+        $('#app-color-mode').val(mode);
+        // Show/hide accent field
+        toggleAccentField(mode);
 
         // Avatar
         if (s.bot_avatar_url) {
@@ -105,6 +118,15 @@ jQuery(document).ready(function ($) {
         }
 
         isDirty = false;
+    }
+
+    function toggleAccentField(mode) {
+        var $accent = $('input[data-key="color_accent"]').closest('.appearance-color-field');
+        if (mode === 'gradient') {
+            $accent.slideDown(200);
+        } else {
+            $accent.slideUp(200);
+        }
     }
 
     /* ================================================================
@@ -140,8 +162,15 @@ jQuery(document).ready(function ($) {
         return 'linear-gradient(135deg, ' + primary + ' 0%, ' + accent + ' 50%, ' + primary + ' 100%)';
     }
 
+    function resolveBackground(s) {
+        if (s.color_mode === 'gradient') {
+            return buildGradient(s.color_primary, s.color_accent);
+        }
+        return s.color_primary;
+    }
+
     function applyPreview(s) {
-        var grad = buildGradient(s.color_primary, s.color_accent);
+        var bg = resolveBackground(s);
 
         // Dynamic hover styles for preview
         var dynamicStyleId = 'appearance-preview-hover-styles';
@@ -156,19 +185,41 @@ jQuery(document).ready(function ($) {
             #preview-toggle-btn:hover { background: ${s.color_secondary} !important; }
         `);
 
+        // Font stack
+        var fontStack = s.font_family;
+        if (fontStack.indexOf(',') === -1) {
+            fontStack += ', sans-serif';
+        }
+
         // Preview header
-        $('#preview-header').css('background', grad);
+        $('#preview-header').css({
+            'background': bg,
+            'font-size': s.header_font_size + 'px',
+            'font-weight': s.header_font_weight,
+        });
         $('#preview-bot-name').text(s.bot_display_name || 'Chat Assistant');
 
-        // Preview messages
+        // Preview messages area
         $('#preview-messages').css('background', s.messages_bg);
+
+        // Bot messages
         $('.preview-msg-bot').css({
-            'background': grad,
+            'background': bg,
             'color': s.text_bot_message,
         });
+        $('.preview-msg-bot .preview-msg-text').css({
+            'font-size': s.bot_font_size + 'px',
+            'font-weight': s.bot_font_weight,
+        });
+
+        // User messages
         $('.preview-msg-user').css({
             'background': s.user_bubble_bg,
             'color': s.text_user_message,
+        });
+        $('.preview-msg-user .preview-msg-text').css({
+            'font-size': s.user_font_size + 'px',
+            'font-weight': s.user_font_weight,
         });
 
         // Bot label
@@ -177,26 +228,24 @@ jQuery(document).ready(function ($) {
 
         // Input area
         $('#preview-input-area').css('background', s.color_background);
-        $('.preview-input-field').css('background', s.messages_bg);
+        $('.preview-input-field').css({
+            'background': s.messages_bg,
+            'font-size': s.input_font_size + 'px',
+            'font-weight': s.input_font_weight,
+        });
 
         // Send button
-        $('#preview-send-btn').css('background', grad);
+        $('#preview-send-btn').css('background', bg);
 
         // Toggle button
         $('#preview-toggle-btn').css({
-            'background': grad,
+            'background': bg,
             'box-shadow': '0 4px 16px ' + hexToRgba(s.color_primary, 0.35),
         });
 
-        // Typography
-        var fontStack = s.font_family;
-        if (fontStack.indexOf(',') === -1) {
-            fontStack += ', sans-serif';
-        }
+        // Global typography
         $('#preview-chatbot').css({
             'font-family': fontStack,
-            'font-size': s.font_size + 'px',
-            'font-weight': s.font_weight,
             'letter-spacing': s.letter_spacing + 'px',
         });
 
@@ -212,13 +261,13 @@ jQuery(document).ready(function ($) {
        7. APPLY TO ACTUAL CHATBOT (if visible on page)
        ================================================================ */
     function applyToChatbot(s) {
-        var grad = buildGradient(s.color_primary, s.color_accent);
+        var bg = resolveBackground(s);
         var root = document.documentElement;
 
         // CSS custom properties
         root.style.setProperty('--chat-primary', s.color_primary);
         root.style.setProperty('--chat-primary-dark', s.color_secondary);
-        root.style.setProperty('--chat-primary-gradient', grad);
+        root.style.setProperty('--chat-primary-gradient', bg);
         root.style.setProperty('--chat-bg', s.color_background);
         root.style.setProperty('--chat-messages-bg', s.messages_bg);
         root.style.setProperty('--chat-user-bubble', s.user_bubble_bg);
@@ -267,6 +316,18 @@ jQuery(document).ready(function ($) {
        9. INPUT EVENTS – Any change triggers live preview
        ================================================================ */
     $(document).on('input change', 'select[data-key], input[data-key]', function () {
+        onSettingChanged();
+    });
+
+    /* ================================================================
+       COLOR MODE PILL TOGGLE
+       ================================================================ */
+    $(document).on('click', '#color-mode-pills .appearance-pill', function () {
+        var mode = $(this).data('mode');
+        $('#color-mode-pills .appearance-pill').removeClass('active');
+        $(this).addClass('active');
+        $('#app-color-mode').val(mode);
+        toggleAccentField(mode);
         onSettingChanged();
     });
 

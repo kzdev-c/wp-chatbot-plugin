@@ -13,17 +13,26 @@ function chatbot_appearance_defaults() {
         'color_secondary'      => '#a81b21',
         'color_background'     => '#ffffff',
         'color_accent'         => '#e8555b',
+        'color_mode'           => 'solid',
 
         // Text colours
         'text_user_message'    => '#1a1d26',
         'text_bot_message'     => '#ffffff',
         'text_ui'              => '#6b7280',
 
-        // Typography
+        // Typography – global
         'font_family'          => "'Inter', sans-serif",
-        'font_size'            => '14',
-        'font_weight'          => '400',
         'letter_spacing'       => '0',
+
+        // Typography – per part
+        'header_font_size'     => '15',
+        'header_font_weight'   => '600',
+        'bot_font_size'        => '14',
+        'bot_font_weight'      => '400',
+        'user_font_size'       => '14',
+        'user_font_weight'     => '400',
+        'input_font_size'      => '13',
+        'input_font_weight'    => '400',
 
         // Bot identity
         'bot_display_name'     => '',
@@ -101,23 +110,35 @@ function chatbot_appearance_save() {
         $settings['font_family'] = chatbot_sanitize_font_family($_POST['font_family']);
     }
 
-    // Font size
-    if (isset($_POST['font_size'])) {
-        $size = intval($_POST['font_size']);
-        if (chatbot_validate_font_size($size)) {
-            $settings['font_size'] = (string) $size;
-        } else {
-            $errors[] = 'Font size must be between 10 and 28.';
+    // Color mode
+    if (isset($_POST['color_mode'])) {
+        $mode = sanitize_text_field($_POST['color_mode']);
+        $settings['color_mode'] = in_array($mode, ['solid', 'gradient'], true) ? $mode : 'solid';
+    }
+
+    // Per-part font sizes
+    $font_size_fields = ['header_font_size', 'bot_font_size', 'user_font_size', 'input_font_size'];
+    foreach ($font_size_fields as $fsf) {
+        if (isset($_POST[$fsf])) {
+            $size = intval($_POST[$fsf]);
+            if (chatbot_validate_font_size($size)) {
+                $settings[$fsf] = (string) $size;
+            } else {
+                $errors[] = ucfirst(str_replace('_', ' ', $fsf)) . ' must be between 10 and 28.';
+            }
         }
     }
 
-    // Font weight
-    if (isset($_POST['font_weight'])) {
-        $weight = sanitize_text_field($_POST['font_weight']);
-        if (chatbot_validate_font_weight($weight)) {
-            $settings['font_weight'] = $weight;
-        } else {
-            $errors[] = 'Invalid font weight.';
+    // Per-part font weights
+    $font_weight_fields = ['header_font_weight', 'bot_font_weight', 'user_font_weight', 'input_font_weight'];
+    foreach ($font_weight_fields as $fwf) {
+        if (isset($_POST[$fwf])) {
+            $weight = sanitize_text_field($_POST[$fwf]);
+            if (chatbot_validate_font_weight($weight)) {
+                $settings[$fwf] = $weight;
+            } else {
+                $errors[] = 'Invalid ' . str_replace('_', ' ', $fwf) . '.';
+            }
         }
     }
 
