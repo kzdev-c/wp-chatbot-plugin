@@ -21,6 +21,19 @@ function chatbot_add_admin_menu()
         'chatbot_settings_page'
     );
 
+    // Only show Web Scraping page when web_scrapper module is selected
+    if (get_option('preferred_module', 'web_scrapper') !== 'file_upload') {
+        add_submenu_page(
+            'chatbot_settings',
+            __('Web Scraping', 'chatbot-plugin'),
+            __('Web Scraping', 'chatbot-plugin'),
+            'manage_options',
+            'chatbot_web_scraping',
+            'chatbot_web_scraping_page'
+        );
+    }
+
+    // Appearance is always last
     add_submenu_page(
         'chatbot_settings',
         __('Appearance', 'chatbot-plugin'),
@@ -28,15 +41,6 @@ function chatbot_add_admin_menu()
         'manage_options',
         'chatbot_appearance',
         'chatbot_appearance_page'
-    );
-
-    add_submenu_page(
-        'chatbot_settings',
-        __('Web Scraping', 'chatbot-plugin'),
-        __('Web Scraping', 'chatbot-plugin'),
-        'manage_options',
-        'chatbot_web_scraping',
-        'chatbot_web_scraping_page'
     );
 }
 
