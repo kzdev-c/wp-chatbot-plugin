@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
     <!-- ===== Page Header ===== -->
     <div class="appearance-page-header">
         <div class="appearance-page-header-left">
-            <h1><span class="dashicons dashicons-art" style="margin-right:8px;font-size:28px;line-height:1.2;"></span>Appearance Settings</h1>
+            <h1 style="display:flex; align-items:center; gap:8px;"><span class="dashicons dashicons-art" style="font-size:32px; width:32px; height:32px; line-height:32px;"></span> Appearance Settings</h1>
             <p class="appearance-page-subtitle">Customize the chatbot's look, colors, typography, and identity. Changes apply instantly.</p>
         </div>
         <div class="appearance-page-header-actions">
@@ -131,12 +131,11 @@ if (!defined('ABSPATH')) exit;
                             </div>
                         </div>
                         <div class="appearance-color-field">
-                            <label for="app-color-secondary">Secondary</label>
+                            <label for="app-color-secondary">Hover</label>
                             <div class="appearance-color-input-wrap">
                                 <input type="color" id="app-color-secondary" data-key="color_secondary" />
                                 <input type="text" class="appearance-color-hex" data-linked="app-color-secondary" maxlength="7" />
                             </div>
-                            <small class="appearance-field-hint">Hover states, send button hover, toggle hover</small>
                         </div>
                         <div class="appearance-color-field">
                             <label for="app-color-background">Background</label>

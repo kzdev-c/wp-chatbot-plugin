@@ -27,13 +27,9 @@
                     <div class="chat-mode-options">
                         <?php 
                         // ==========================================
-                        // HARDCODED CHAT MODE TOGGLE
+                        // PRESET CHAT MODE
                         // ==========================================
-                        // Change this value to 'ai_only', 'livechat_only', or 'both'
-                        $chat_mode = 'both'; 
-                        
-                        // Force update the option so the frontend automatically inherits this mode
-                        update_option('chatbot_chat_mode', $chat_mode);
+                        $chat_mode = 'livechat_only'; 
                         ?>
                         <label class="chat-mode-option <?php echo $chat_mode === 'ai_only' ? 'active' : ''; ?>" for="chat-mode-ai">
                             <input type="radio" name="chat_mode" id="chat-mode-ai" value="ai_only" <?php checked($chat_mode, 'ai_only'); ?> />

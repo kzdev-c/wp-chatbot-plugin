@@ -668,23 +668,9 @@ jQuery(document).ready(function ($) {
                 </div>
                 <p class="cr-success-title">Thanks for rating!</p>
                 <p class="cr-success-sub" id="cr-success-detail"></p>
-                <button id="start-new-chat-btn" style="margin-top:12px;padding:8px 16px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:500;width:100%;">Start New Session</button>
             </div>
         </div>
     `);
-
-        // Handle start new chat
-        messagesContainer.off('click', '#start-new-chat-btn').on('click', '#start-new-chat-btn', function() {
-            // Delete the session ID and cookies so a fresh one is made
-            var sid = getSessionId();
-            localStorage.removeItem('cb_history_' + sid);
-            sessionStorage.removeItem('chatbot_livechat_session_id');
-            document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            
-            // Clear UI immediately and force reload
-            messagesContainer.empty();
-            window.location.reload();
-        });
 
         scrollToBottom();
 
@@ -764,14 +750,19 @@ jQuery(document).ready(function ($) {
                 },
                 success: function (response) {
                     $('#cr-stars, .cr-pip-row, #cr-label, #chat-rating-submit').hide();
-                    $('#cr-success-detail').text('You rated this chat ' + selectedVal + ' out of 5 — ' + LABELS[selectedVal] + '.');
+                    $('#cr-success-detail').text('You rated this chat ' + selectedVal + ' out of 5 — ' + LABELS[selectedVal] + '. Starting new session...');
                     $('#cr-success').css('display', 'flex');
 
-                    // Re-enable input
-                    inputField.prop('disabled', false).attr('placeholder', originalPlaceholder);
-                    sendButton.prop('disabled', false);
-
                     scrollToBottom();
+                    
+                    setTimeout(function() {
+                        var sid = getSessionId();
+                        localStorage.removeItem('cb_history_' + sid);
+                        sessionStorage.removeItem('chatbot_livechat_session_id');
+                        document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                        messagesContainer.empty();
+                        window.location.reload();
+                    }, 1500);
                 },
                 error: function () {
                     btn.prop('disabled', false).text(originalText);

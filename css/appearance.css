@@ -435,12 +435,12 @@
 }
 
 .preview-header-name {
-    font-size: 14px;
+    font-size: 1em;
     font-weight: 600;
 }
 
 .preview-header-status {
-    font-size: 10px;
+    font-size: 0.714em;
     opacity: 0.75;
 }
 
@@ -475,7 +475,7 @@
 }
 
 .preview-msg-label {
-    font-size: 10px;
+    font-size: 0.714em;
     font-weight: 600;
     opacity: 0.7;
     text-transform: uppercase;
@@ -484,7 +484,7 @@
 }
 
 .preview-msg-text {
-    font-size: 13px;
+    font-size: 0.929em;
     line-height: 1.45;
 }
 
@@ -518,7 +518,7 @@
     padding: 8px 14px;
     background: #f7f8fc;
     border-radius: 18px;
-    font-size: 12px;
+    font-size: 0.857em;
     color: #9ca3af;
 }
 

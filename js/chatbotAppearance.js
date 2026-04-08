@@ -143,6 +143,19 @@ jQuery(document).ready(function ($) {
     function applyPreview(s) {
         var grad = buildGradient(s.color_primary, s.color_accent);
 
+        // Dynamic hover styles for preview
+        var dynamicStyleId = 'appearance-preview-hover-styles';
+        var $style = $('#' + dynamicStyleId);
+        if (!$style.length) {
+            $style = $('<style id="' + dynamicStyleId + '"></style>').appendTo('head');
+        }
+        $style.html(`
+            #preview-send-btn { cursor: pointer; transition: background 0.25s ease; }
+            #preview-send-btn:hover { background: ${s.color_secondary} !important; }
+            #preview-toggle-btn { cursor: pointer; transition: background 0.25s ease; }
+            #preview-toggle-btn:hover { background: ${s.color_secondary} !important; }
+        `);
+
         // Preview header
         $('#preview-header').css('background', grad);
         $('#preview-bot-name').text(s.bot_display_name || 'Chat Assistant');
@@ -258,11 +271,18 @@ jQuery(document).ready(function ($) {
     });
 
 
+    let pendingUpdate = false;
     function onSettingChanged() {
-        isDirty = true;
-        var s = collectFormValues();
-        currentSettings = s;
-        applyPreview(s);
+        if (!pendingUpdate) {
+            pendingUpdate = true;
+            requestAnimationFrame(function() {
+                isDirty = true;
+                var s = collectFormValues();
+                currentSettings = s;
+                applyPreview(s);
+                pendingUpdate = false;
+            });
+        }
     }
 
     /* ================================================================
