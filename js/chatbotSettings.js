@@ -105,12 +105,46 @@ jQuery(document).ready(function ($) {
                     $('#chatbot-response').html(parsed.html);
                     setTimeout(function () { $('#chatbot-response').fadeOut(400); }, 4000);
 
+                    // Update Status UI
+                    var $apiDot = $('#status-dot-api');
+                    var $apiText = $('#status-text-api');
+                    if (parsed.success) {
+                        $apiDot.addClass('active');
+                        $apiText.html('API: <strong>Connected</strong>');
+                    } else {
+                        $apiDot.removeClass('active');
+                        $apiText.html('API: <em>Not configured</em>');
+                    }
+
+                    var $livechatDot = $('#status-dot-livechat');
+                    var $livechatText = $('#status-text-livechat');
+                    if (parsed.livechat_secret_key_valid) {
+                        $livechatDot.addClass('active');
+                        $livechatText.html('Live Chat: <strong>Available</strong>');
+                    } else {
+                        $livechatDot.removeClass('active');
+                        $livechatText.html('Live Chat: <em>Invalid Secret key</em>');
+                    }
+
                     // Toggle live chat availability
                     if (parsed.has_livechat) {
-                        showToast('Credentials valid – Live Chat available!', 'success');
+                        $('#livechat-status-container').show();
+                        $('#livechat-key-container').slideDown(250);
+                        $('#status-text-mode').html('Mode: <strong>AI + Live Chat</strong>');
+                        $('#chat-mode-both').prop('checked', true);
+                        $('.chat-mode-option').removeClass('active');
+                        $('#chat-mode-both').closest('.chat-mode-option').addClass('active');
+                        showToast('Credentials valid – Live Chat available! Mode set to AI + Live Chat.', 'success');
                     } else {
-                        showToast('Credentials saved successfully.', 'success');
+                        $('#livechat-status-container').hide();
+                        $('#livechat-key-container').slideUp(250);
+                        $('#status-text-mode').html('Mode: <strong>AI</strong>');
+                        $('#chat-mode-ai').prop('checked', true);
+                        $('.chat-mode-option').removeClass('active');
+                        $('#chat-mode-ai').closest('.chat-mode-option').addClass('active');
+                        showToast('Live chat disabled. Mode set to AI.', 'success');
                     }
+
                 } catch (ex) {
                     showToast('Invalid response from server.', 'error');
                 }

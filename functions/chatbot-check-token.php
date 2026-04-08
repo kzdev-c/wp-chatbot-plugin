@@ -63,13 +63,24 @@ if ($response_data && isset($response_data['valid'])) {
         update_option('livechat_secret_key', '');
     }
 
-    // Disable AI chat if livechat is disabled
-    if ($has_livechat === '0') {
+    // Update chat modes based on livechat status
+    if ($has_livechat === '1') {
+        update_option('chatbot_chat_mode', 'both');
+        update_option('ai_chat_enabled', '1');
+    } else {
         update_option('ai_chat_enabled', '0');
+        update_option('chatbot_chat_mode', 'ai_only');
+    }
+
+    if($livechat_secret_key_valid === '1'){
+        update_option('livechat_secret_key_valid', '1');
+    }else{
+        update_option('livechat_secret_key_valid', '0');
     }
 
     $result['has_livechat'] = ($has_livechat === '1');
     $result['livechat_secret_key_valid'] = ($livechat_secret_key_valid === '1');
+
 
     if ($response_data['valid'] == 1) {
         $result['success'] = true;

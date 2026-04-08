@@ -108,7 +108,7 @@
                         <label for="token">Token</label>
                         <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required placeholder="••••••••" />
                     </div>
-                    <div class="settings-field" id="livechat-key-container" style="<?php echo ($chat_mode === 'ai_only') ? 'display:none;' : ''; ?>">
+                    <div class="settings-field" id="livechat-key-container" style="<?php echo (get_option('has_livechat') == '1') ? '' : 'display:none;'; ?>">
                         <label for="livechat_secret_key">Live Chat Secret Key</label>
                         <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>" placeholder="••••••••" />
                     </div>
@@ -123,18 +123,18 @@
             <div class="settings-card settings-card-status">
                 <div class="settings-card-body" style="padding:16px 20px;">
                     <div class="settings-status-row">
-                        <span class="settings-status-dot <?php echo get_option('chatbot_token') ? 'active' : ''; ?>"></span>
-                        <span>API: <?php echo get_option('chatbot_token') ? '<strong>Connected</strong>' : '<em>Not configured</em>'; ?></span>
+                        <span id="status-dot-api" class="settings-status-dot <?php echo get_option('chatbot_token') ? 'active' : ''; ?>"></span>
+                        <span id="status-text-api">API: <?php echo get_option('chatbot_token') ? '<strong>Connected</strong>' : '<em>Not configured</em>'; ?></span>
                     </div>
-                    <div class="settings-status-row">
-                        <span class="settings-status-dot <?php echo get_option('has_livechat') == '1' ? 'active' : ''; ?>"></span>
-                        <span>Live Chat: <?php echo get_option('has_livechat') == '1' ? '<strong>Available</strong>' : '<em>Not available</em>'; ?></span>
+                    <div class="settings-status-row" id="livechat-status-container" style="<?php echo get_option('has_livechat') == '1' ? '' : 'display:none;'; ?>">
+                        <span id="status-dot-livechat" class="settings-status-dot <?php echo get_option('livechat_secret_key_valid') == '1' ? 'active' : ''; ?>"></span>
+                        <span id="status-text-livechat">Live Chat: <?php echo get_option('livechat_secret_key_valid') == '1' ? '<strong>Available</strong>' : '<em>Invalid Secret key</em>'; ?></span>
                     </div>
                     <div class="settings-status-row">
                         <span class="settings-status-dot active"></span>
-                        <span>Mode: <strong><?php
+                        <span id="status-text-mode">Mode: <strong><?php
                                 $m = get_option('chatbot_chat_mode', 'ai_only');
-                                echo $m === 'ai_only' ? 'AI Only' : ($m === 'livechat_only' ? 'Live Chat Only' : 'AI + Live Chat');
+                                echo $m === 'ai_only' ? 'AI' : ($m === 'livechat_only' ? 'Live Chat Only' : 'AI + Live Chat');
                             ?></strong></span>
                     </div>
                 </div>
