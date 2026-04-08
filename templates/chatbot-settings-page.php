@@ -1,79 +1,158 @@
-<div class="wrap" id="chatbot">
-    <h1>Preferred Module</h1>
-    <div id="module-response"></div>
-    <form id="preferred-module-form" class="modern-form">
-        <div class="form-group">
-            <label for="preferred-module">Preferred Module:</label>
-            <select class="form-control full-width" id="preferred-module" name="preferred_module" required>
-                <option disabled>Select Module</option>
-                <option value="web_scrapper" <?php if (get_option('preferred_module') == 'web_scrapper') echo 'selected'; ?>>Web Scrapper</option>
-                <option value="file_upload" <?php if (get_option('preferred_module') == 'file_upload') echo 'selected'; ?>>File Upload</option>
-            </select>
-            <div id="check-files-container" style="display:none; margin-top: 10px;">
-                <button type="button" class="btn btn-secondary" id="check-files-btn">Check Files</button>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="chatbot_name">Chatbot Name:</label>
-            <input type="text" id="chatbot_name" name="chatbot_name" value="<?php echo esc_attr(get_option('chatbot_name')); ?>">
-        </div>
+<?php if (!defined('ABSPATH')) exit; ?>
+<div class="wrap chatbot-settings-wrap" id="chatbot">
 
-        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save</button>
-    </form>
-
-    <hr>
-    
-    <div id="livechat-section-response"></div>
-    <form id="livechat-section-form" class="modern-form">
-        <div class="form-group">
-            <label for="chatbot_dashboard_url">Dashboard API Base URL:</label>
-            <input type="url" id="chatbot_dashboard_url" name="chatbot_dashboard_url" value="<?php echo esc_attr(get_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local')); ?>" required>
+    <!-- Page Header -->
+    <div class="settings-page-header">
+        <div>
+            <h1><span class="dashicons dashicons-admin-generic" style="margin-right:8px;font-size:26px;line-height:1.3;"></span>Chatbot Settings</h1>
+            <p class="settings-page-subtitle">Configure credentials, chat mode, and connection settings.</p>
         </div>
-        
-        <div id="livechat-ui-section" style="<?php echo get_option('has_livechat') == '1' ? '' : 'display: none;'; ?>">
-            <div class="form-group">
-                <label for="livechat_secret_key">Livechat Secret Key:</label>
-                <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>">
-            </div>
-            <div class="form-group" style="margin-top: 20px; padding: 15px; background: #fff; border: 1px solid #ccd0d4; border-radius: 4px; box-shadow: 0 1px 1px rgba(0,0,0,.04);">
-                <div style="display: flex; align-items: center;">
-                    <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px; margin-right: 12px; margin-bottom: 0;">
-                        <input type="checkbox" id="ai_chat_enabled" name="ai_chat_enabled" value="1" <?php checked('1', get_option('ai_chat_enabled')); ?> style="opacity: 0; width: 0; height: 0; position: absolute;">
-                        <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; transition: .4s; border-radius: 24px;"></span>
-                        <style>
-                            .switch .slider { background-color: #ccc; }
-                            .switch input:checked + .slider { background-color: #4CAF50 !important; }
-                            .switch input:focus + .slider { box-shadow: 0 0 1px #4CAF50; }
-                            .switch .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-                            .switch input:checked + .slider:before { transform: translateX(20px); }
-                        </style>
-                    </label>
-                    <label for="ai_chat_enabled" style="margin-bottom: 0; font-weight: 600; font-size: 14px; cursor: pointer; color: #1d2327;">Enable AI Chat along with Live Chat</label>
+    </div>
+
+    <!-- Toast -->
+    <div id="settings-toast" class="settings-toast"></div>
+
+    <div class="settings-grid">
+
+        <!-- ─── Left Column ─── -->
+        <div class="settings-col-main">
+
+            <!-- Card: Chat Mode -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h2><span class="dashicons dashicons-format-chat"></span> Chat Mode</h2>
                 </div>
-                <div style="margin-top: 6px; margin-left: 56px;">
-                    <span style="font-size: 13px; color: #646970; display: block; line-height: 1.5;">When enabled, the AI automatically handles conversations and smoothly escalates to live chat only when necessary.</span>
+                <div class="settings-card-body">
+                    <p class="settings-card-desc">Choose how the chatbot operates for your visitors.</p>
+                    <div class="chat-mode-options">
+                        <?php $chat_mode = get_option('chatbot_chat_mode', 'ai_only'); ?>
+                        <label class="chat-mode-option <?php echo $chat_mode === 'ai_only' ? 'active' : ''; ?>" for="chat-mode-ai">
+                            <input type="radio" name="chat_mode" id="chat-mode-ai" value="ai_only" <?php checked($chat_mode, 'ai_only'); ?> />
+                            <span class="chat-mode-icon"><span class="dashicons dashicons-welcome-learn-more"></span></span>
+                            <span class="chat-mode-label">AI Only</span>
+                            <span class="chat-mode-desc">Fully automated AI responses. No human agents.</span>
+                        </label>
+                        <label class="chat-mode-option <?php echo $chat_mode === 'livechat_only' ? 'active' : ''; ?>" for="chat-mode-live">
+                            <input type="radio" name="chat_mode" id="chat-mode-live" value="livechat_only" <?php checked($chat_mode, 'livechat_only'); ?> />
+                            <span class="chat-mode-icon"><span class="dashicons dashicons-admin-users"></span></span>
+                            <span class="chat-mode-label">Live Chat Only</span>
+                            <span class="chat-mode-desc">Human agents handle all conversations.</span>
+                        </label>
+                        <label class="chat-mode-option <?php echo $chat_mode === 'both' ? 'active' : ''; ?>" for="chat-mode-both">
+                            <input type="radio" name="chat_mode" id="chat-mode-both" value="both" <?php checked($chat_mode, 'both'); ?> />
+                            <span class="chat-mode-icon"><span class="dashicons dashicons-randomize"></span></span>
+                            <span class="chat-mode-label">Both (AI + Live)</span>
+                            <span class="chat-mode-desc">AI handles initial queries, escalates to live agents.</span>
+                        </label>
+                    </div>
                 </div>
             </div>
+
+            <!-- Card: General -->
+            <div class="settings-card">
+                <div class="settings-card-header">
+                    <h2><span class="dashicons dashicons-admin-settings"></span> General</h2>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-field-row-2">
+                        <div class="settings-field">
+                            <label for="preferred-module">Preferred Module</label>
+                            <select id="preferred-module" name="preferred_module">
+                                <option disabled>Select Module</option>
+                                <option value="web_scrapper" <?php if (get_option('preferred_module') == 'web_scrapper') echo 'selected'; ?>>Web Scrapper</option>
+                                <option value="file_upload" <?php if (get_option('preferred_module') == 'file_upload') echo 'selected'; ?>>File Upload</option>
+                            </select>
+                        </div>
+                        <div class="settings-field">
+                            <label for="chatbot_name">Chatbot Name</label>
+                            <input type="text" id="chatbot_name" name="chatbot_name" value="<?php echo esc_attr(get_option('chatbot_name')); ?>" placeholder="Chat Assistant" />
+                        </div>
+                    </div>
+                    <div id="check-files-container" style="display:none;">
+                        <button type="button" class="settings-btn settings-btn-outline settings-btn-sm" id="check-files-btn">
+                            <span class="dashicons dashicons-media-text"></span> Check Files
+                        </button>
+                    </div>
+                    <div id="module-response" class="settings-response"></div>
+
+                    <div class="settings-save-row">
+                        <button type="button" class="settings-btn settings-btn-primary" id="save-general-btn">
+                            <span class="dashicons dashicons-saved"></span> Save General Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Live Chat Connection (shown when mode includes livechat) -->
+            <div class="settings-card" id="livechat-settings-card" style="<?php echo ($chat_mode === 'ai_only') ? 'display:none;' : ''; ?>">
+                <div class="settings-card-header">
+                    <h2><span class="dashicons dashicons-admin-links"></span> Live Chat Connection</h2>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-field">
+                        <label for="livechat_secret_key">Secret Key</label>
+                        <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>" placeholder="••••••••" />
+                    </div>
+                    <div id="livechat-section-response" class="settings-response"></div>
+
+                    <div class="settings-save-row">
+                        <button type="button" class="settings-btn settings-btn-primary" id="save-livechat-btn">
+                            <span class="dashicons dashicons-saved"></span> Save Live Chat Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Save Chat Settings</button>
-    </form>
 
-    <hr>
+        <!-- ─── Right Column: Credentials ─── -->
+        <div class="settings-col-side">
+            <div class="settings-card settings-card-credentials">
+                <div class="settings-card-header">
+                    <h2><span class="dashicons dashicons-lock"></span> API Credentials</h2>
+                </div>
+                <div class="settings-card-body">
+                    <div class="settings-field">
+                        <label for="chatbot_dashboard_url">Dashboard API URL</label>
+                        <input type="url" id="chatbot_dashboard_url" name="chatbot_dashboard_url" value="<?php echo esc_attr(get_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local')); ?>" />
+                        <small style="color:#9ca3af;font-size:11.5px;margin-top:4px;display:block;">Base URL used for all API calls including credential verification.</small>
+                    </div>
+                    <div class="settings-field">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" value="<?php echo esc_attr(get_option('chatbot_username')); ?>" required />
+                    </div>
+                    <div class="settings-field">
+                        <label for="token">Token</label>
+                        <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required placeholder="••••••••" />
+                    </div>
+                    <div id="chatbot-response" class="settings-response"></div>
+                    <button type="button" class="settings-btn settings-btn-primary" id="submit-btn" style="width:100%">
+                        <span class="dashicons dashicons-yes-alt"></span> Check & Save Credentials
+                    </button>
+                </div>
+            </div>
 
-    <h1>Credentials</h1>
-    <div id="chatbot-response"></div>
-    <form method="post" action="<?php echo admin_url('admin-post.php'); ?>" enctype="multipart/form-data" class="modern-form" id="chatbot-settings-form">
-        <input type="hidden" name="action" value="chatbot_save_settings">
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" value="<?php echo esc_attr(get_option('chatbot_username')); ?>" required>
+            <!-- Status indicator -->
+            <div class="settings-card settings-card-status">
+                <div class="settings-card-body" style="padding:16px 20px;">
+                    <div class="settings-status-row">
+                        <span class="settings-status-dot <?php echo get_option('chatbot_token') ? 'active' : ''; ?>"></span>
+                        <span>API: <?php echo get_option('chatbot_token') ? '<strong>Connected</strong>' : '<em>Not configured</em>'; ?></span>
+                    </div>
+                    <div class="settings-status-row">
+                        <span class="settings-status-dot <?php echo get_option('has_livechat') == '1' ? 'active' : ''; ?>"></span>
+                        <span>Live Chat: <?php echo get_option('has_livechat') == '1' ? '<strong>Available</strong>' : '<em>Not available</em>'; ?></span>
+                    </div>
+                    <div class="settings-status-row">
+                        <span class="settings-status-dot active"></span>
+                        <span>Mode: <strong><?php
+                                $m = get_option('chatbot_chat_mode', 'ai_only');
+                                echo $m === 'ai_only' ? 'AI Only' : ($m === 'livechat_only' ? 'Live Chat Only' : 'AI + Live Chat');
+                            ?></strong></span>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="token">Token:</label>
-            <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required>
-        </div>
 
-        <button id="submit-btn" name="chatbot_save_settings" value="Save Settings" class="btn btn-primary">Check & Save</button>
-    </form>
-
+    </div>
 </div>

@@ -61,6 +61,29 @@ add_action('wp_ajax_nopriv_submit_visitor_info', 'chatbot_submit_visitor_info');
 
 add_action('wp_ajax_chatbot_livechat_settings_save', 'chatbot_livechat_settings_save');
 
+// ──── Chat Mode ────
+add_action('wp_ajax_chatbot_save_chat_mode', 'chatbot_save_chat_mode');
+
+function chatbot_save_chat_mode() {
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error('Unauthorized');
+    }
+
+    $valid_modes = ['ai_only', 'livechat_only', 'both'];
+    $mode = isset($_POST['chat_mode']) ? sanitize_text_field($_POST['chat_mode']) : 'ai_only';
+
+    if (!in_array($mode, $valid_modes, true)) {
+        $mode = 'ai_only';
+    }
+
+    update_option('chatbot_chat_mode', $mode);
+
+    // Sync ai_chat_enabled for backwards compatibility
+    update_option('ai_chat_enabled', $mode === 'both' ? '1' : '0');
+
+    wp_send_json_success(['mode' => $mode]);
+}
+
 // ──── Appearance Settings ────
 require_once plugin_dir_path(__FILE__) . '../functions/chatbot-appearance-settings.php';
 

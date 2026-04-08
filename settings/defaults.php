@@ -26,6 +26,10 @@ function chatbot_default_settings()
         update_option('chatbot_name', '');
     }
 
+    if (get_option('chatbot_chat_mode') === false) {
+        update_option('chatbot_chat_mode', 'ai_only');
+    }
+
     if (get_option('live_chatbot_session_id', null)) {
         add_option('live_chatbot_session_id', null);
     }

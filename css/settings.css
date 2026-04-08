@@ -1,81 +1,393 @@
-.modern-form {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    background-color: #ffffff;
+/* ===================================================
+   Chatbot Plugin – Settings Page CSS (Redesigned)
+   =================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ─── Base ─── */
+.chatbot-settings-wrap {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    max-width: 1280px;
+    padding: 0 12px 40px;
 }
 
-.form-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
+.settings-page-header {
+    margin-bottom: 24px;
 }
 
-.form-group label {
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #333333;
-}
-
-.form-group input[type="text"] {
-    padding: 12px;
-    border: 1px solid #cccccc;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border-color 0.3s;
-}
-
-.form-group input[type="text"]:focus {
-    border-color: #0073aa;
-    outline: none;
-}
-
-.button-primary {
-    background-color: #0073aa;
-    color: #ffffff;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.button-primary:hover {
-    background-color: #005177;
-}
-
-.tab-content {
-    margin-top: 20px;
-    /* Add space above the tab body */
-}
-
-.form-check {
+.settings-page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1d26;
+    margin: 0;
     display: flex;
     align-items: center;
 }
 
-.form-check-input {
-    margin-right: 10px;
-    /* Space between checkbox and label */
+.settings-page-subtitle {
+    color: #6b7280;
+    font-size: 13.5px;
+    margin: 4px 0 0;
 }
 
-.loading {
-    display: none;
-    margin-top: 20px;
+/* ─── Grid layout ─── */
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+    align-items: start;
 }
 
-label[for="useSiteDomainCheckbox"] {
-    user-select: none;
+@media (max-width: 1080px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-.full-width {
-    max-width: unset !important;
+.settings-col-main {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.form-group input[type="text"] {
-    padding-top: 0 !important;
-    padding-bottom: 0 !important;
+.settings-col-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 46px;
 }
+
+/* ─── Cards ─── */
+.settings-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    overflow: hidden;
+    transition: box-shadow 0.25s ease;
+}
+
+.settings-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+}
+
+.settings-card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.settings-card-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1d26;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-card-header .dashicons {
+    font-size: 18px;
+    color: #6b7280;
+}
+
+.settings-card-body {
+    padding: 20px;
+}
+
+.settings-card-desc {
+    font-size: 13px;
+    color: #9ca3af;
+    margin: 0 0 16px;
+}
+
+/* ─── Chat Mode Selector ─── */
+.chat-mode-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 780px) {
+    .chat-mode-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chat-mode-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 20px 14px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    background: #fafbfc;
+}
+
+.chat-mode-option:hover {
+    border-color: #c7d2fe;
+    background: #f5f3ff;
+}
+
+.chat-mode-option.active {
+    border-color: #6366f1;
+    background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+
+.chat-mode-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.chat-mode-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    background: #e5e7eb;
+    transition: background 0.2s;
+}
+
+.chat-mode-option.active .chat-mode-icon {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+.chat-mode-icon .dashicons {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: #6b7280;
+    transition: color 0.2s;
+}
+
+.chat-mode-option.active .chat-mode-icon .dashicons {
+    color: #fff;
+}
+
+.chat-mode-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1a1d26;
+    margin-bottom: 4px;
+}
+
+.chat-mode-desc {
+    font-size: 11.5px;
+    color: #9ca3af;
+    line-height: 1.4;
+}
+
+/* ─── Field Rows ─── */
+.settings-field-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 680px) {
+    .settings-field-row-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-field {
+    margin-bottom: 12px;
+}
+
+.settings-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.settings-field input[type="text"],
+.settings-field input[type="url"],
+.settings-field input[type="password"],
+.settings-field select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: #1a1d26;
+    background: #f9fafb;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.settings-field input:focus,
+.settings-field select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    background: #fff;
+}
+
+/* ─── Buttons ─── */
+.settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1.5px solid transparent;
+    line-height: 1.4;
+}
+
+.settings-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+}
+
+.settings-btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+    color: #fff;
+    border-color: #6366f1;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+}
+
+.settings-btn-primary:hover {
+    box-shadow: 0 4px 16px rgba(99,102,241,0.35);
+    transform: translateY(-1px);
+}
+
+.settings-btn-outline {
+    background: #fff;
+    color: #374151;
+    border-color: #e5e7eb;
+}
+
+.settings-btn-outline:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.settings-btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.settings-save-row {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-start;
+}
+
+/* ─── Response messages ─── */
+.settings-response {
+    margin: 8px 0;
+}
+
+.settings-response .alert-success {
+    background: #ecfdf5;
+    border: 1px solid #6ee7b7;
+    color: #065f46;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.settings-response .alert-danger {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+/* ─── Status Card ─── */
+.settings-card-status {
+    background: #fafbfc;
+}
+
+.settings-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #374151;
+    padding: 6px 0;
+}
+
+.settings-status-row + .settings-status-row {
+    border-top: 1px solid #f3f4f6;
+}
+
+.settings-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d1d5db;
+    flex-shrink: 0;
+}
+
+.settings-status-dot.active {
+    background: #10b981;
+    box-shadow: 0 0 6px rgba(16,185,129,0.4);
+}
+
+/* ─── Toast ─── */
+.settings-toast {
+    position: fixed;
+    top: 46px;
+    right: 20px;
+    background: #1a1d26;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    z-index: 999999;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    max-width: 360px;
+}
+
+.settings-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.settings-toast.success { background: linear-gradient(135deg, #059669, #10b981); }
+.settings-toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+/* ─── Credentials card accent ─── */
+.settings-card-credentials {
+    border-top: 3px solid #6366f1;
+}
+
+/* ─── Spin keyframe ─ */
+@keyframes settings-spin {
+    from { transform: rotate(0); }
+    to { transform: rotate(360deg); }
+}
+.settings-spin { animation: settings-spin 1s linear infinite; }

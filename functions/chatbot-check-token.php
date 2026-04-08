@@ -3,10 +3,20 @@
 $username           = sanitize_text_field($_POST['username']);
 $token              = sanitize_text_field($_POST['token']);
 
+// Save dashboard URL if provided (ensures constant stays in sync)
+if (!empty($_POST['chatbot_dashboard_url'])) {
+    $dashboard_url = esc_url_raw($_POST['chatbot_dashboard_url']);
+    update_option('chatbot_dashboard_url', $dashboard_url);
+} else {
+    $dashboard_url = defined('CHATBOT_DASHBOARD_API_BASE_URL') ? CHATBOT_DASHBOARD_API_BASE_URL : get_option('chatbot_dashboard_url', 'https://chatbot-dashboard.local');
+}
+
+$api_base = rtrim($dashboard_url, '/');
+
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-    CURLOPT_URL            => CHATBOT_DASHBOARD_API_BASE_URL . '/api/check-user-credentials',
+    CURLOPT_URL            => $api_base . '/api/check-user-credentials',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_SSL_VERIFYPEER => false,
     CURLOPT_ENCODING => '',

@@ -6,175 +6,203 @@ jQuery(document).ready(function ($) {
     const preferredModuleSelect = $('#preferred-module');
     const checkFilesBtn = $('#check-files-btn');
 
-    function checkInputs() {
-        if (usernameInput.val().trim() !== '' && tokenInput.val().trim() !== '') {
-            saveBtn.prop('disabled', false);
-        } else {
-            saveBtn.prop('disabled', true);
-        }
+    /* ================================================================
+       TOAST HELPER
+       ================================================================ */
+    function showToast(message, type) {
+        type = type || 'success';
+        var $t = $('#settings-toast');
+        $t.removeClass('show success error').addClass(type).text(message);
+        setTimeout(function () { $t.addClass('show'); }, 10);
+        setTimeout(function () { $t.removeClass('show'); }, 3500);
     }
 
-    const checkFilesContainer = $('#check-files-container');
+    /* ================================================================
+       CHAT MODE SELECTOR
+       ================================================================ */
+    $('input[name="chat_mode"]').on('change', function () {
+        var mode = $(this).val();
 
-    function toggleCheckFilesButton() {
-        chat_clog('Toggle function called');
-        if (preferredModuleSelect.val() === 'file_upload') {
-            checkFilesContainer.show();
+        // Update active class
+        $('.chat-mode-option').removeClass('active');
+        $(this).closest('.chat-mode-option').addClass('active');
+
+        // Show/hide live chat card
+        if (mode === 'ai_only') {
+            $('#livechat-settings-card').slideUp(250);
         } else {
-            checkFilesContainer.hide();
+            $('#livechat-settings-card').slideDown(250);
+        }
+
+        // Save immediately
+        $.ajax({
+            url: checkCredentialsAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'chatbot_save_chat_mode',
+                chat_mode: mode
+            },
+            success: function () {
+                showToast('Chat mode updated!', 'success');
+                // Update status display
+                var labels = { ai_only: 'AI Only', livechat_only: 'Live Chat Only', both: 'AI + Live Chat' };
+                $('.settings-status-row').last().find('strong').text(labels[mode] || mode);
+            },
+            error: function () {
+                showToast('Error saving chat mode.', 'error');
+            }
+        });
+    });
+
+    /* ================================================================
+       CHECK INPUTS (credentials)
+       ================================================================ */
+    function checkInputs() {
+        saveBtn.prop('disabled', !(usernameInput.val().trim() && tokenInput.val().trim()));
+    }
+
+    usernameInput.on('input', checkInputs);
+    tokenInput.on('input', checkInputs);
+    checkInputs();
+
+    /* ================================================================
+       CHECK FILES TOGGLE
+       ================================================================ */
+    function toggleCheckFilesButton() {
+        if (preferredModuleSelect.val() === 'file_upload') {
+            $('#check-files-container').show();
+        } else {
+            $('#check-files-container').hide();
         }
     }
 
     preferredModuleSelect.on('change', toggleCheckFilesButton);
-
-    // Run once on page load in case of pre-selected value
     toggleCheckFilesButton();
 
-    usernameInput.on('input', checkInputs);
-    tokenInput.on('input', checkInputs);
-
-    checkInputs();
-
+    /* ================================================================
+       SAVE CREDENTIALS
+       ================================================================ */
     saveBtn.on('click', function (e) {
         e.preventDefault();
 
-        var username = usernameInput.val()
-        var token = tokenInput.val();
-
-        $('#chatbot-response').html('<p>Loading...</p>');
+        var $btn = $(this);
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Checking…');
 
         $.ajax({
             url: checkCredentialsAjax.ajaxurl,
             type: 'POST',
             data: {
                 action: 'check_token',
-                token: token,
-                username: username
+                token: tokenInput.val(),
+                username: usernameInput.val(),
+                chatbot_dashboard_url: $('#chatbot_dashboard_url').val()
             },
             success: function (response) {
-                // Parse the JSON response
                 try {
                     var parsed = typeof response === 'string' ? JSON.parse(response) : response;
-                    
-                    // Show the server response
                     $('#chatbot-response').html(parsed.html);
-                    setTimeout(function () {
-                        $('#chatbot-response').hide(1000);
-                    }, 4000);
+                    setTimeout(function () { $('#chatbot-response').fadeOut(400); }, 4000);
 
-                    // Dynamically toggle live chat section based on account plan
-                    var livechatUi = $('#livechat-ui-section');
+                    // Toggle live chat availability
                     if (parsed.has_livechat) {
-                        livechatUi.slideDown();
+                        showToast('Credentials valid – Live Chat available!', 'success');
                     } else {
-                        livechatUi.slideUp();
-                        // Reset local fields just visually so it matches cleared backend
-                        $('#livechat_secret_key').val('');
-                        $('#ai_chat_enabled').prop('checked', false);
+                        showToast('Credentials saved successfully.', 'success');
                     }
-                } catch (e) {
-                    $('#chatbot-response').html('<p>Invalid response from server.</p>');
+                } catch (ex) {
+                    showToast('Invalid response from server.', 'error');
                 }
             },
             error: function () {
-                // Show error message if AJAX fails
-                $('#chatbot-response').html('<p>There was an error processing your request.</p>');
-                setTimeout(function () {
-                    $('#chatbot-response').hide(1000);
-                }, 4000);
+                showToast('Connection error. Please try again.', 'error');
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(originalHtml);
             }
         });
     });
 
+    /* ================================================================
+       SAVE GENERAL SETTINGS (Module + Name)
+       ================================================================ */
+    $('#save-general-btn').on('click', function () {
+        var $btn = $(this);
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Saving…');
 
-    $('#preferred-module-form').on('submit', function (event) {
-        event.preventDefault(); // Prevent the default form submission
-
-        // Get the selected value
-        var selectedModule = $('#preferred-module').val();
-        var chatbot_name = $('#chatbot_name').val();
-
-        // Send AJAX request
         $.ajax({
             url: checkCredentialsAjax.ajaxurl,
             type: 'POST',
             data: {
                 action: 'chatbot_settings',
-                preferred_module: selectedModule,
-                chatbot_name: chatbot_name
+                preferred_module: preferredModuleSelect.val(),
+                chatbot_name: $('#chatbot_name').val()
             },
-            success: function (response) {
-                $('#module-response').html('<div class=" alert-success">' + response + '</div>');
-                setTimeout(function () {
-                    $('#module-response').hide(1000);
-                }, 4000);
+            success: function () {
+                showToast('General settings saved!', 'success');
             },
-            error: function (error) {
-                $('#module-response').html('<div class=" alert-danger">Error saving module.</div>');
-                setTimeout(function () {
-                    $('#module-response').hide(1000);
-                }, 4000);
+            error: function () {
+                showToast('Error saving settings.', 'error');
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(originalHtml);
             }
         });
     });
 
-    checkFilesBtn.on('click', function (event) {
-        event.preventDefault(); // Prevent the default form submission
+    /* ================================================================
+       CHECK FILES
+       ================================================================ */
+    checkFilesBtn.on('click', function () {
+        var $btn = $(this);
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Checking…');
 
-        // Send AJAX request
         $.ajax({
             url: checkFilesAjax.ajaxurl,
             type: 'POST',
-            data: {
-                action: 'chatbot_check_files',
-            },
+            data: { action: 'chatbot_check_files' },
             success: function (response) {
-                $('#module-response').html('<div class=" alert-success">' + response + '</div>');
-                setTimeout(function () {
-                    $('#module-response').hide(1000);
-                }, 4000);
+                showToast(response || 'Files checked.', 'success');
             },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.error('Check files AJAX error', textStatus, errorThrown, jqXHR.responseText);
-                var message = 'Error checking files (' + textStatus + ')';
-                if (jqXHR.responseText) {
-                    message += ': ' + jqXHR.responseText;
-                }
-                $('#module-response').html('<div class=" alert-danger">' + message + '</div>');
-                setTimeout(function () {
-                    $('#module-response').hide(1000);
-                }, 4000);
+            error: function (jqXHR, textStatus) {
+                showToast('Error checking files: ' + textStatus, 'error');
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(originalHtml);
             }
         });
     });
 
-    $('#livechat-section-form').on('submit', function (event) {
-        event.preventDefault();
+    /* ================================================================
+       SAVE LIVE CHAT SETTINGS
+       ================================================================ */
+    $('#save-livechat-btn').on('click', function () {
+        var $btn = $(this);
+        var originalHtml = $btn.html();
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Saving…');
 
-        var dashboard_url = $('#chatbot_dashboard_url').val();
-        var secret_key = $('#livechat_secret_key').val();
-        var ai_chat_enabled = $('#ai_chat_enabled').is(':checked') ? '1' : '0';
+        var chat_mode = $('input[name="chat_mode"]:checked').val();
+        var ai_chat_enabled = (chat_mode === 'both') ? '1' : '0';
 
         $.ajax({
             url: checkCredentialsAjax.ajaxurl,
             type: 'POST',
             data: {
                 action: 'chatbot_livechat_settings_save',
-                chatbot_dashboard_url: dashboard_url,
-                livechat_secret_key: secret_key,
+                chatbot_dashboard_url: $('#chatbot_dashboard_url').val(),
+                livechat_secret_key: $('#livechat_secret_key').val(),
                 ai_chat_enabled: ai_chat_enabled
             },
-            success: function (response) {
-                $('#livechat-section-response').html('<div class=" alert-success">Live chat settings saved successfully.</div>');
-                setTimeout(function () {
-                    $('#livechat-section-response').hide(1000);
-                }, 4000);
+            success: function () {
+                showToast('Live chat settings saved!', 'success');
             },
-            error: function (error) {
-                $('#livechat-section-response').html('<div class=" alert-danger">Error saving live chat settings.</div>');
-                setTimeout(function () {
-                    $('#livechat-section-response').hide(1000);
-                }, 4000);
+            error: function () {
+                showToast('Error saving live chat settings.', 'error');
+            },
+            complete: function () {
+                $btn.prop('disabled', false).html(originalHtml);
             }
         });
     });
