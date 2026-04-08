@@ -10,6 +10,10 @@ jQuery(document).ready(function ($) {
     const endChatButton = $('#codeness-chatbot-end-chat');
     const closeChatDialog = $('#close-chat-dialog');
 
+    // Bot display name from appearance settings (injected via localization)
+    let botDisplayName = (typeof chatbotAjax !== 'undefined' && chatbotAjax.botDisplayName)
+        ? chatbotAjax.botDisplayName : 'Bot';
+
     // ===== Live Chat State =====
     let isLiveChatMode = false;
     let liveChatSessionId = null;
@@ -782,11 +786,11 @@ jQuery(document).ready(function ($) {
                     if (prompt_message && !shouldHandoff) {
                         $('#codeness-chatbot-messages').append(`
                             <div class="chatbot-message bot-message prompt-message">
-                                <div class="message-header">Prompt</div>
+                                <div class="message-header">${botDisplayName}</div>
                                 <div class="message-content">${messageText}</div>
                             </div>
                             <div class="chatbot-message bot-message prompt-message">
-                                <div class="message-header">Prompt</div>
+                                <div class="message-header">${botDisplayName}</div>
                                 <div class="message-content">${prompt_message}</div>
                                 <div class="prompt-buttons">
                                     <button class="yes-no-buttons" id="yes-button">Click here to contact us</button>
@@ -796,7 +800,7 @@ jQuery(document).ready(function ($) {
                     } else if (!shouldHandoff) {
                         $('#codeness-chatbot-messages').append(`
                         <div class="chatbot-message bot-message">
-                            <div class="message-header">Bot</div>
+                            <div class="message-header">${botDisplayName}</div>
                             <div class="message-content">${messageText}</div>
                         </div>
                     `);
@@ -1050,7 +1054,7 @@ jQuery(document).ready(function ($) {
                                 } else if (msg.sender === 'aibot') {
                                     messagesContainer.append(`
                                         <div class="chatbot-message bot-message ai-history-message" style="background-color: #f8f9fa; filter: grayscale(20%); opacity: 0.9;">
-                                            <div class="message-header">Bot</div>
+                                            <div class="message-header">${botDisplayName}</div>
                                             <div class="message-content">${formattedMsg}</div>
                                         </div>
                                     `);

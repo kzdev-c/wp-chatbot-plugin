@@ -1,8 +1,17 @@
+<?php
+// Load appearance settings for avatar and bot name
+require_once plugin_dir_path(__FILE__) . '../functions/chatbot-appearance-settings.php';
+$_appearance_defaults = chatbot_appearance_defaults();
+$_appearance = get_option('chatbot_appearance', $_appearance_defaults);
+$_appearance = wp_parse_args($_appearance, $_appearance_defaults);
+$_bot_avatar = !empty($_appearance['bot_avatar_url']) ? $_appearance['bot_avatar_url'] : plugin_dir_url(__FILE__) . 'icon.png';
+$_bot_name   = !empty($_appearance['bot_display_name']) ? $_appearance['bot_display_name'] : (get_option('chatbot_name') ?: 'Chat Assistant');
+?>
 <div id="codeness-chatbot" class="collapsed">
     <div id="codeness-chatbot-header">
-        <img src="<?php echo plugin_dir_url(__FILE__); ?>icon.png" alt="Chatbot Icon" id="bot-image-header">
+        <img src="<?php echo esc_url($_bot_avatar); ?>" alt="Chatbot Icon" id="bot-image-header">
         <div style="display:flex; flex-direction:column; flex:1; gap:2px;">
-            <span><?php echo esc_html(get_option('chatbot_name') ?: 'Chat Assistant'); ?></span>
+            <span><?php echo esc_html($_bot_name); ?></span>
             <span style="font-size:11px; font-weight:400; opacity:0.75;">Online • Ready to help</span>
         </div>
         <span id="codeness-chatbot-close">&times;</span>
@@ -33,7 +42,7 @@
 </div>
 
 <div id="codeness-chatbot-toggle">
-    <img src="<?php echo plugin_dir_url(__FILE__); ?>icon.png" alt="Chatbot Icon" id="bot-image">
+    <img src="<?php echo esc_url($_bot_avatar); ?>" alt="Chatbot Icon" id="bot-image">
     <span id="codeness-chatbot-counter" style="display:none;">0</span>
 </div>
 

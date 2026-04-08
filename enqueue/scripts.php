@@ -60,12 +60,41 @@ function chatbot_enqueue_scripts($hook)
     if (
         $hook === 'toplevel_page_chatbot_settings' ||
         $hook === 'chatbot_page_chatbot_web_scraping' ||
-        $hook === 'chatbot_page_chatbot_file_upload'
+        $hook === 'chatbot_page_chatbot_file_upload' ||
+        $hook === 'chatbot_page_chatbot_appearance'
     ) {
         wp_enqueue_style(
             'settings-css',
             plugin_dir_url(__FILE__) . '../css/settings.css'
         );
+    }
+
+    // ——— Appearance settings page ———
+    if ($hook === 'chatbot_page_chatbot_appearance') {
+        // CSS
+        wp_enqueue_style(
+            'chatbot-appearance-css',
+            plugin_dir_url(__FILE__) . '../css/appearance.css',
+            [],
+            time()
+        );
+
+        // WordPress media uploader
+        wp_enqueue_media();
+
+        // JS
+        wp_enqueue_script(
+            'chatbot-appearance-js',
+            plugin_dir_url(__FILE__) . '../js/chatbotAppearance.js',
+            ['jquery'],
+            time(),
+            true
+        );
+
+        wp_localize_script('chatbot-appearance-js', 'chatbotAppearanceData', [
+            'ajaxurl'          => admin_url('admin-ajax.php'),
+            'defaultAvatarUrl' => plugin_dir_url(__FILE__) . '../templates/icon.png',
+        ]);
     }
 
     $ws_host = parse_url(CHATBOT_DASHBOARD_API_BASE_URL, PHP_URL_HOST) ?: 'chatbot-dashboard.local';
@@ -74,6 +103,7 @@ function chatbot_enqueue_scripts($hook)
         'ajaxurl'              => admin_url('admin-ajax.php'),
         'livechat_ws_host'     => $ws_host,
         'livechat_secret_key'  => get_option('livechat_secret_key', ''),
+        'botDisplayName'       => esc_html(get_option('chatbot_name', 'Bot')),
     ]);
 
     wp_localize_script('chatbot-settings-js', 'checkCredentialsAjax', [
@@ -116,8 +146,70 @@ function load_bootstrap()
 }
 
 
+/**
+ * Inject saved appearance settings as CSS custom properties on the front-end
+ * so the chatbot always renders with the user's saved appearance.
+ */
+function chatbot_inject_appearance_css()
+{
+    if (is_admin()) return; // Only front-end
+
+    require_once plugin_dir_path(__FILE__) . '../functions/chatbot-appearance-settings.php';
+    $defaults = chatbot_appearance_defaults();
+    $settings = get_option('chatbot_appearance', $defaults);
+    $settings = wp_parse_args($settings, $defaults);
+
+    $primary = esc_attr($settings['color_primary']);
+    $secondary = esc_attr($settings['color_secondary']);
+    $bg = esc_attr($settings['color_background']);
+    $accent = esc_attr($settings['color_accent']);
+    $msgBg = esc_attr($settings['messages_bg']);
+    $userBubble = esc_attr($settings['user_bubble_bg']);
+    $userText = esc_attr($settings['text_user_message']);
+    $botText = esc_attr($settings['text_bot_message']);
+    $font = $settings['font_family']; // Already sanitised on save
+
+    $gradient = "linear-gradient(135deg, {$primary} 0%, {$accent} 50%, {$primary} 100%)";
+
+    // Build shadow colour with rough rgba fallback
+    $hex = ltrim($primary, '#');
+    $r = hexdec(substr($hex, 0, 2));
+    $g = hexdec(substr($hex, 2, 2));
+    $b = hexdec(substr($hex, 4, 2));
+    $shadow = "0 6px 24px rgba({$r},{$g},{$b},0.4)";
+
+    $css = ":root {
+        --chat-primary: {$primary};
+        --chat-primary-dark: {$secondary};
+        --chat-primary-gradient: {$gradient};
+        --chat-bg: {$bg};
+        --chat-messages-bg: {$msgBg};
+        --chat-user-bubble: {$userBubble};
+        --chat-user-text: {$userText};
+        --chat-bot-text: {$botText};
+        --chat-font: {$font};
+        --chat-toggle-shadow: {$shadow};
+        --livechat-primary: {$primary};
+        --livechat-gradient: {$gradient};
+    }";
+
+    // Load the chosen Google Font if it isn't Inter (already loaded)
+    $fontName = trim(explode(',', str_replace("'", '', $font))[0]);
+    if ($fontName && strtolower($fontName) !== 'inter' && strtolower($fontName) !== 'system-ui') {
+        $fontSlug = urlencode($fontName);
+        wp_enqueue_style(
+            'chatbot-appearance-font',
+            "https://fonts.googleapis.com/css2?family={$fontSlug}:wght@300;400;500;600;700&display=swap"
+        );
+    }
+
+    wp_add_inline_style('chatbot-css', $css);
+}
+
+
 add_action('admin_enqueue_scripts', 'load_bootstrap');
 add_action('admin_enqueue_scripts', 'chatbot_enqueue_scripts');
 
 add_action('wp_enqueue_scripts', 'chatbot_enqueue_scripts');
 add_action('wp_enqueue_scripts', 'load_font_awesome');
+add_action('wp_enqueue_scripts', 'chatbot_inject_appearance_css');

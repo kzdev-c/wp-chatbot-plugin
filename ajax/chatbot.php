@@ -60,3 +60,12 @@ add_action('wp_ajax_submit_visitor_info', 'chatbot_submit_visitor_info');
 add_action('wp_ajax_nopriv_submit_visitor_info', 'chatbot_submit_visitor_info');
 
 add_action('wp_ajax_chatbot_livechat_settings_save', 'chatbot_livechat_settings_save');
+
+// ──── Appearance Settings ────
+require_once plugin_dir_path(__FILE__) . '../functions/chatbot-appearance-settings.php';
+
+add_action('wp_ajax_chatbot_appearance_save', 'chatbot_appearance_save');
+add_action('wp_ajax_chatbot_appearance_load', 'chatbot_appearance_load');
+add_action('wp_ajax_nopriv_chatbot_appearance_load', 'chatbot_appearance_load');
+add_action('wp_ajax_chatbot_appearance_import', 'chatbot_appearance_import');
+add_action('wp_ajax_chatbot_appearance_reset', 'chatbot_appearance_reset');
