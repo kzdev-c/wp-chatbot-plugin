@@ -37,6 +37,84 @@ if (!defined('ABSPATH')) exit;
         <!-- Left: Settings Cards -->
         <div class="appearance-settings-col">
 
+            <!-- ─── Bot Identity ─── -->
+            <div class="appearance-card">
+                <div class="appearance-card-header" data-toggle="appearance-card-identity">
+                    <h2><span class="dashicons dashicons-admin-users"></span> Bot Identity</h2>
+                    <span class="dashicons dashicons-arrow-down-alt2 appearance-card-toggle"></span>
+                </div>
+                <div class="appearance-card-body" id="appearance-card-identity">
+                    <div class="appearance-field">
+                        <label for="app-bot-name">Bot Display Name</label>
+                        <input type="text" id="app-bot-name" data-key="bot_display_name" placeholder="Chat Assistant" maxlength="50" />
+                        <small class="appearance-field-hint">Shown in the chatbot header and as the bot message label. Max 50 chars.</small>
+                    </div>
+                    <div class="appearance-field" style="margin-top:16px;">
+                        <label>Bot Avatar / Icon</label>
+                        <div class="appearance-avatar-row">
+                            <div class="appearance-avatar-preview" id="appearance-avatar-preview">
+                                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon.png'); ?>" alt="Bot Avatar" id="appearance-avatar-img" />
+                            </div>
+                            <div class="appearance-avatar-actions">
+                                <button type="button" class="appearance-btn appearance-btn-sm" id="appearance-avatar-upload">
+                                    <span class="dashicons dashicons-upload"></span> Upload Image
+                                </button>
+                                <button type="button" class="appearance-btn appearance-btn-sm appearance-btn-outline" id="appearance-avatar-reset">
+                                    <span class="dashicons dashicons-image-rotate"></span> Reset to Default
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="app-bot-avatar-url" data-key="bot_avatar_url" value="" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── Typography ─── -->
+            <div class="appearance-card">
+                <div class="appearance-card-header" data-toggle="appearance-card-fonts">
+                    <h2><span class="dashicons dashicons-editor-paragraph"></span> Typography</h2>
+                    <span class="dashicons dashicons-arrow-down-alt2 appearance-card-toggle"></span>
+                </div>
+                <div class="appearance-card-body" id="appearance-card-fonts">
+                    <div class="appearance-field-row">
+                        <div class="appearance-field">
+                            <label for="app-font-family">Font Family</label>
+                            <select id="app-font-family" data-key="font_family">
+                                <option value="'Inter', sans-serif">Inter</option>
+                                <option value="'Roboto', sans-serif">Roboto</option>
+                                <option value="'Outfit', sans-serif">Outfit</option>
+                                <option value="'Poppins', sans-serif">Poppins</option>
+                                <option value="'Open Sans', sans-serif">Open Sans</option>
+                                <option value="'Lato', sans-serif">Lato</option>
+                                <option value="'Montserrat', sans-serif">Montserrat</option>
+                                <option value="'Nunito', sans-serif">Nunito</option>
+                                <option value="system-ui, sans-serif">System UI</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="appearance-field-row appearance-field-row-3">
+                        <div class="appearance-field">
+                            <label for="app-font-size">Size (px)</label>
+                            <input type="number" id="app-font-size" min="10" max="28" step="1" data-key="font_size" value="14" />
+                        </div>
+                        <div class="appearance-field">
+                            <label for="app-font-weight">Weight</label>
+                            <select id="app-font-weight" data-key="font_weight">
+                                <option value="300">Light (300)</option>
+                                <option value="400">Regular (400)</option>
+                                <option value="500">Medium (500)</option>
+                                <option value="600">Semi-Bold (600)</option>
+                                <option value="700">Bold (700)</option>
+                            </select>
+                        </div>
+                        <div class="appearance-field">
+                            <label for="app-letter-spacing">Spacing (px)</label>
+                            <input type="number" id="app-letter-spacing" min="-2" max="5" step="0.1" data-key="letter_spacing" value="0" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- ─── UI Colors ─── -->
             <div class="appearance-card">
                 <div class="appearance-card-header" data-toggle="appearance-card-colors">
@@ -58,6 +136,7 @@ if (!defined('ABSPATH')) exit;
                                 <input type="color" id="app-color-secondary" data-key="color_secondary" />
                                 <input type="text" class="appearance-color-hex" data-linked="app-color-secondary" maxlength="7" />
                             </div>
+                            <small class="appearance-field-hint">Hover states, send button hover, toggle hover</small>
                         </div>
                         <div class="appearance-color-field">
                             <label for="app-color-background">Background</label>
@@ -120,86 +199,6 @@ if (!defined('ABSPATH')) exit;
                                 <input type="text" class="appearance-color-hex" data-linked="app-text-ui" maxlength="7" />
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ─── Typography ─── -->
-            <div class="appearance-card">
-                <div class="appearance-card-header" data-toggle="appearance-card-fonts">
-                    <h2><span class="dashicons dashicons-editor-paragraph"></span> Typography</h2>
-                    <span class="dashicons dashicons-arrow-down-alt2 appearance-card-toggle"></span>
-                </div>
-                <div class="appearance-card-body" id="appearance-card-fonts">
-                    <div class="appearance-field-row">
-                        <div class="appearance-field">
-                            <label for="app-font-family">Font Family</label>
-                            <select id="app-font-family" data-key="font_family">
-                                <option value="'Inter', sans-serif">Inter</option>
-                                <option value="'Roboto', sans-serif">Roboto</option>
-                                <option value="'Outfit', sans-serif">Outfit</option>
-                                <option value="'Poppins', sans-serif">Poppins</option>
-                                <option value="'Open Sans', sans-serif">Open Sans</option>
-                                <option value="'Lato', sans-serif">Lato</option>
-                                <option value="'Montserrat', sans-serif">Montserrat</option>
-                                <option value="'Nunito', sans-serif">Nunito</option>
-                                <option value="system-ui, sans-serif">System UI</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="appearance-field-row appearance-field-row-3">
-                        <div class="appearance-field">
-                            <label for="app-font-size">Size (px)</label>
-                            <input type="range" id="app-font-size" min="10" max="28" step="1" data-key="font_size" />
-                            <span class="appearance-range-value" id="app-font-size-val">14</span>
-                        </div>
-                        <div class="appearance-field">
-                            <label for="app-font-weight">Weight</label>
-                            <select id="app-font-weight" data-key="font_weight">
-                                <option value="300">Light (300)</option>
-                                <option value="400">Regular (400)</option>
-                                <option value="500">Medium (500)</option>
-                                <option value="600">Semi-Bold (600)</option>
-                                <option value="700">Bold (700)</option>
-                            </select>
-                        </div>
-                        <div class="appearance-field">
-                            <label for="app-letter-spacing">Spacing (px)</label>
-                            <input type="range" id="app-letter-spacing" min="-2" max="5" step="0.1" data-key="letter_spacing" />
-                            <span class="appearance-range-value" id="app-letter-spacing-val">0</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ─── Bot Identity ─── -->
-            <div class="appearance-card">
-                <div class="appearance-card-header" data-toggle="appearance-card-identity">
-                    <h2><span class="dashicons dashicons-admin-users"></span> Bot Identity</h2>
-                    <span class="dashicons dashicons-arrow-down-alt2 appearance-card-toggle"></span>
-                </div>
-                <div class="appearance-card-body" id="appearance-card-identity">
-                    <div class="appearance-field">
-                        <label for="app-bot-name">Bot Display Name</label>
-                        <input type="text" id="app-bot-name" data-key="bot_display_name" placeholder="Chat Assistant" maxlength="50" />
-                        <small class="appearance-field-hint">Shown in the chatbot header and as the bot message label. Max 50 chars.</small>
-                    </div>
-                    <div class="appearance-field" style="margin-top:16px;">
-                        <label>Bot Avatar / Icon</label>
-                        <div class="appearance-avatar-row">
-                            <div class="appearance-avatar-preview" id="appearance-avatar-preview">
-                                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon.png'); ?>" alt="Bot Avatar" id="appearance-avatar-img" />
-                            </div>
-                            <div class="appearance-avatar-actions">
-                                <button type="button" class="appearance-btn appearance-btn-sm" id="appearance-avatar-upload">
-                                    <span class="dashicons dashicons-upload"></span> Upload Image
-                                </button>
-                                <button type="button" class="appearance-btn appearance-btn-sm appearance-btn-outline" id="appearance-avatar-reset">
-                                    <span class="dashicons dashicons-image-rotate"></span> Reset to Default
-                                </button>
-                            </div>
-                        </div>
-                        <input type="hidden" id="app-bot-avatar-url" data-key="bot_avatar_url" value="" />
                     </div>
                 </div>
             </div>

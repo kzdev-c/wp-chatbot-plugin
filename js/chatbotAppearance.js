@@ -82,22 +82,14 @@ jQuery(document).ready(function ($) {
         });
 
         // Select/text/range
-        $('select[data-key], input[type="text"][data-key]').each(function () {
+        $('select[data-key], input[type="text"][data-key], input[type="number"][data-key]').each(function () {
             var key = $(this).data('key');
             if (s[key] !== undefined) {
                 $(this).val(s[key]);
             }
         });
 
-        $('input[type="range"][data-key]').each(function () {
-            var key = $(this).data('key');
-            if (s[key] !== undefined) {
-                $(this).val(s[key]);
-                // Update range value label
-                var id = $(this).attr('id');
-                $('#' + id + '-val').text(s[key]);
-            }
-        });
+
 
         // Hidden fields
         $('input[type="hidden"][data-key]').each(function () {
@@ -129,13 +121,10 @@ jQuery(document).ready(function ($) {
             s[$(this).data('key')] = $(this).val();
         });
 
-        $('input[type="text"][data-key]').each(function () {
+        $('input[type="text"][data-key], input[type="number"][data-key]').each(function () {
             s[$(this).data('key')] = $(this).val();
         });
 
-        $('input[type="range"][data-key]').each(function () {
-            s[$(this).data('key')] = $(this).val();
-        });
 
         $('input[type="hidden"][data-key]').each(function () {
             s[$(this).data('key')] = $(this).val();
@@ -268,11 +257,6 @@ jQuery(document).ready(function ($) {
         onSettingChanged();
     });
 
-    // Range value labels
-    $(document).on('input', 'input[type="range"][data-key]', function () {
-        var id = $(this).attr('id');
-        $('#' + id + '-val').text($(this).val());
-    });
 
     function onSettingChanged() {
         isDirty = true;

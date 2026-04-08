@@ -224,7 +224,8 @@
 }
 
 .appearance-field select,
-.appearance-field input[type="text"] {
+.appearance-field input[type="text"],
+.appearance-field input[type="number"] {
     width: 100%;
     padding: 10px 14px;
     border: 1.5px solid #e5e7eb;
@@ -239,7 +240,8 @@
 }
 
 .appearance-field select:focus,
-.appearance-field input[type="text"]:focus {
+.appearance-field input[type="text"]:focus,
+.appearance-field input[type="number"]:focus {
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
     background: #fff;

@@ -103,6 +103,7 @@
 
 #codeness-chatbot-toggle:hover {
   transform: scale(1.1);
+  background: var(--chat-primary-dark);
   box-shadow: 0 8px 32px rgba(210, 35, 42, 0.5);
 }
 
@@ -168,7 +169,7 @@
 }
 
 #codeness-chatbot-close:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--chat-primary-dark);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -265,6 +266,7 @@
 
 #codeness-chatbot-send:hover {
   transform: scale(1.1);
+  background: var(--chat-primary-dark);
   box-shadow: 0 4px 12px rgba(210, 35, 42, 0.35);
 }
 
@@ -279,7 +281,7 @@
 
 #codeness-chatbot-mic:hover {
   background: var(--chat-messages-bg);
-  color: var(--chat-primary);
+  color: var(--chat-primary-dark);
   transform: scale(1.1);
 }
 
@@ -343,7 +345,7 @@
   color: var(--chat-bot-text);
   border-radius: 18px 18px 18px 4px;
   padding: 10px 16px;
-  box-shadow: 0 2px 8px rgba(210, 35, 42, 0.15);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chat-primary-dark) 25%, transparent);
 }
 
 .message-header {
@@ -584,6 +586,7 @@
 
 #contact-form button:hover {
   transform: translateY(-1px);
+  background: var(--chat-primary-dark);
   box-shadow: 0 6px 20px rgba(210, 35, 42, 0.3);
 }
 
