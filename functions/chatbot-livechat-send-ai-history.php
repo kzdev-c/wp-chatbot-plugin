@@ -25,7 +25,7 @@ $conversations = [];
 foreach ($conversations_raw as $conv) {
     if (isset($conv['sender']) && isset($conv['message'])) {
         $sender = sanitize_text_field($conv['sender']);
-        if (in_array($sender, ['aibot', 'visitor', 'workflow'])) {
+        if (in_array($sender, ['aibot', 'visitor', 'workflow', 'workflow_bot'])) {
             $conversations[] = [
                 'sender' => $sender,
                 'message' => sanitize_textarea_field($conv['message'])
