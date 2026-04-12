@@ -250,8 +250,8 @@ jQuery(document).ready(function ($) {
                     return;
                 }
 
-                const { response: msgText, prompt_message, livechat } = parsed.response;
-                const shouldHandoff = String(livechat).toLowerCase() === 'true';
+                const { response: msgText, prompt_message, livechat, agent_id: aiAgentId } = parsed.response;
+                const shouldHandoff = String(livechat).toLowerCase() === 'true' || !!aiAgentId;
 
                 if (prompt_message && !shouldHandoff) {
                     messagesContainer.append(`
@@ -449,7 +449,8 @@ jQuery(document).ready(function ($) {
                         if (p.response) {
                             liveChatId = p.response.chat_id || liveChatId;
                             agentId = p.response.agent_id || agentId;
-                            if (String(p.response.livechat).toLowerCase() === 'true') enterLiveChatMode(false, historyL);
+                            console.log(p.response);
+                            if (String(p.response.livechat).toLowerCase() === 'true' || !!p.response.agent_id) enterLiveChatMode(false, historyL);
                             else appendSystemMessage(messagesContainer, p.response.response || 'No agents available.', formatChatMessage, scrollToBottom);
                         }
                     } catch (e) { appendSystemMessage(messagesContainer, 'Error connecting to agent.', formatChatMessage, scrollToBottom); }
