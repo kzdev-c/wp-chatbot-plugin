@@ -1013,6 +1013,7 @@ jQuery(document).ready(function ($) {
                 // Workflow terminates here
                 setWorkflowActive(false);
                 saveWorkflowState();
+                appendSystemMessage('Switching to AI assistant...');
                 break;
 
             case 'predefined_variable':
@@ -1032,6 +1033,7 @@ jQuery(document).ready(function ($) {
                 // Workflow terminates here
                 setWorkflowActive(false);
                 saveWorkflowState();
+                appendSystemMessage('Switching to AI assistant...');
                 break;
 
             case 'ai_continuation':
@@ -1254,6 +1256,7 @@ jQuery(document).ready(function ($) {
             chat_clog('[Workflow] User typed a message, breaking out of workflow.');
             setWorkflowActive(false);
             clearWorkflowState();
+            appendSystemMessage('Switching to AI assistant...');
             
             // Build the conversational context from the workflow
             if (workflowConversation && workflowConversation.length > 0) {
