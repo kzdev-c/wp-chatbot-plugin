@@ -25,7 +25,7 @@ $conversations = [];
 foreach ($conversations_raw as $conv) {
     if (isset($conv['sender']) && isset($conv['message'])) {
         $sender = sanitize_text_field($conv['sender']);
-        if (in_array($sender, ['aibot', 'visitor'])) {
+        if (in_array($sender, ['aibot', 'visitor', 'workflow'])) {
             $conversations[] = [
                 'sender' => $sender,
                 'message' => sanitize_textarea_field($conv['message'])
@@ -34,7 +34,7 @@ foreach ($conversations_raw as $conv) {
     }
 }
 
-$api_url = rtrim($base_url, '/') . '/send-ai-conversation';
+$api_url = rtrim($base_url, '/') . '/send-previous-conversation';
 
 $post_data = [
     'token'         => $token,

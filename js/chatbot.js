@@ -8,7 +8,7 @@ import { getSessionId, initUserTracking, getCookie, setCookie } from './modules/
 import { scrollToBottom, updateCounter as uiUpdateCounter, showChatbot, hideChatbot, appendSystemMessage } from './modules/ui.js';
 import { startWebSocket, stopWebSocket, showAgentTyping, hideAgentTyping } from './modules/livechat.js';
 import { getWorkflowNode, renderWorkflowNode } from './modules/workflow.js';
-import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat, getLiveChatMessages } from './modules/api.js';
+import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat } from './modules/api.js';
 import { initSpeechRecognition } from './modules/voice.js';
 import { renderRatingUI, fillStars, setLabel, getLabel } from './modules/rating.js';
 
@@ -75,22 +75,38 @@ jQuery(document).ready(function ($) {
     };
 
     const getConversationHistory = () => {
-        if (workflowConversation?.length > 0) return [...workflowConversation];
         let conversations = [];
         $('#codeness-chatbot-messages .chatbot-message').each(function () {
             const el = $(this);
             if (el.is('.system-message, .loading-message') || el.find('.prompt-buttons').length > 0 || el.hasClass('agent-message')) return;
-            
+
+            // Workflow bot question
             if (el.hasClass('workflow-node')) {
                 let text = el.find('.workflow-question .message-content').text().trim();
-                if (text) conversations.push({ sender: 'aibot', message: text });
+                if (text) conversations.push({ sender: 'workflow_bot', message: text });
                 return;
             }
 
-            let text = el.find('.message-content').text().trim();
-            if (!text) return;
-            let sender = (el.is('.user-message, .workflow-user-choice')) ? 'visitor' : 'aibot';
-            conversations.push({ sender, message: text });
+            // Workflow bot direct answer
+            if (el.hasClass('workflow-answer')) {
+                let text = el.find('.message-content').text().trim();
+                if (text) conversations.push({ sender: 'workflow_bot', message: text });
+                return;
+            }
+
+            // Visitor messages (regular or workflow choices)
+            if (el.is('.user-message, .workflow-user-choice')) {
+                let text = el.find('.message-content').text().trim();
+                if (text) conversations.push({ sender: 'visitor', message: text });
+                return;
+            }
+
+            // AI bot message
+            if (el.hasClass('bot-message')) {
+                let text = el.find('.message-content').text().trim();
+                if (text) conversations.push({ sender: 'aibot', message: text });
+                return;
+            }
         });
         return conversations;
     };
@@ -141,7 +157,8 @@ jQuery(document).ready(function ($) {
         
         localStorage.setItem('cb_livechat_' + liveChatSessionId, JSON.stringify({
             liveChatId: liveChatId,
-            agentId: agentId
+            agentId: agentId,
+            lastMessageId: lastMessageId
         }));
         
         if (recognition) recognition.stop();
@@ -152,7 +169,11 @@ jQuery(document).ready(function ($) {
             appendSystemMessage(messagesContainer, "You're now chatting with a live agent. Let us know how we can help!", formatChatMessage, scrollToBottom);
             let conversations = passedConversations || getConversationHistory();
             if (conversations.length > 0) {
-                sendAIHistoryToLiveChat(liveChatSessionId, conversations, agentId, (passedConversations || workflowConversation.length > 0) ? 'workflow' : 'ai');
+                // Auto-detect type based on what senders are present
+                const hasWorkflow = conversations.some(c => c.sender === 'workflow_bot');
+                const hasAI = conversations.some(c => c.sender === 'aibot');
+                const type = (hasWorkflow && hasAI) ? 'both' : hasWorkflow ? 'workflow' : 'ai';
+                sendAIHistoryToLiveChat(liveChatSessionId, conversations, agentId, type);
             }
         }
         startWebSocket(liveChatId, chatbotAjax, {
@@ -166,12 +187,26 @@ jQuery(document).ready(function ($) {
                         renderRatingUI(messagesContainer, closedId);
                     } else if (!e.id || e.id > lastMessageId) {
                         appendAgentMessage(e.message || e.content || '');
-                        if (e.id) lastMessageId = e.id;
+                        if (e.id) {
+                            lastMessageId = e.id;
+                            updateLiveChatState();
+                        }
                     }
                 }
             },
             onTyping: (isTyping) => isTyping ? showAgentTyping(messagesContainer) : hideAgentTyping()
         });
+    };
+
+    // Keep localStorage in sync with current lastMessageId
+    const updateLiveChatState = () => {
+        if (!isLiveChatMode) return;
+        const s = getSessionId();
+        localStorage.setItem('cb_livechat_' + s, JSON.stringify({
+            liveChatId: liveChatId,
+            agentId: agentId,
+            lastMessageId: lastMessageId
+        }));
     };
 
     const exitLiveChatMode = () => {
@@ -363,6 +398,7 @@ jQuery(document).ready(function ($) {
             if (parsedLc.liveChatId) {
                 liveChatId = parsedLc.liveChatId;
                 agentId = parsedLc.agentId || null;
+                lastMessageId = parsedLc.lastMessageId || 0;
                 shouldResumeLiveChat = true;
             }
         } catch (e) {}
@@ -370,22 +406,6 @@ jQuery(document).ready(function ($) {
 
     if (shouldResumeLiveChat) {
         enterLiveChatMode(true);
-        // Fetch any messages missed during page reload
-        getLiveChatMessages(sid).done(res => {
-            try {
-                const parsed = typeof res === 'string' ? JSON.parse(res) : res;
-                if (parsed.success && parsed.messages) {
-                    parsed.messages.forEach(msg => {
-                        if (msg.id > lastMessageId) {
-                            if (msg.sender_type === 'agent') {
-                                appendAgentMessage(msg.message || msg.content || '');
-                            }
-                            lastMessageId = msg.id;
-                        }
-                    });
-                }
-            } catch (e) { console.error('[LiveChat] Error loading messages:', e); }
-        });
     } else {
         initWorkflow();
     }
