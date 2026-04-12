@@ -46,6 +46,10 @@ if (isset($_POST['agentId']) && !empty($_POST['agentId'])) {
     $post_data['agentId'] = intval($_POST['agentId']);
 }
 
+if (isset($_POST['type']) && !empty($_POST['type'])) {
+    $post_data['type'] = sanitize_text_field($_POST['type']);
+}
+
 $result = chatbot_api_request('POST', $api_url, $post_data);
 
 

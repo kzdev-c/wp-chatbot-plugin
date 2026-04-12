@@ -104,6 +104,7 @@ function chatbot_enqueue_scripts($hook)
         'livechat_ws_host'     => $ws_host,
         'livechat_secret_key'  => get_option('livechat_secret_key', ''),
         'botDisplayName'       => esc_html(get_option('chatbot_name', 'Bot')),
+        'modules'              => get_option('chatbot_modules', []),
     ]);
 
     wp_localize_script('chatbot-settings-js', 'checkCredentialsAjax', [

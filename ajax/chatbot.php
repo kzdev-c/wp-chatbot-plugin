@@ -81,6 +81,14 @@ function chatbot_save_chat_mode() {
     wp_send_json_success(['mode' => $mode]);
 }
 
+// ──── Workflow (Predefined Questions) ────
+function chatbot_get_workflow() {
+    include plugin_dir_path(__FILE__) . '../functions/chatbot-get-workflow.php';
+}
+
+add_action('wp_ajax_chatbot_get_workflow', 'chatbot_get_workflow');
+add_action('wp_ajax_nopriv_chatbot_get_workflow', 'chatbot_get_workflow');
+
 // ──── Appearance Settings ────
 require_once plugin_dir_path(__FILE__) . '../functions/chatbot-appearance-settings.php';
 

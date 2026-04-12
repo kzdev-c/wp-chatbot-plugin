@@ -1190,3 +1190,169 @@
   color: #9ca3af;
   margin: 0;
 }
+
+/* =========================================================
+   WORKFLOW / PREDEFINED QUESTIONS UI
+   ========================================================= */
+
+/* Container for the workflow node (question + options) */
+.workflow-node {
+  align-self: flex-start;
+  max-width: 92% !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: messageIn 0.35s var(--chat-transition);
+}
+
+/* The question bubble */
+.workflow-question {
+  background: var(--chat-primary-gradient);
+  color: var(--chat-bot-text);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chat-primary-dark) 25%, transparent);
+}
+
+.workflow-question .message-header {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Options grid */
+.workflow-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+/* Individual option button */
+.workflow-option-btn {
+  all: initial;
+  font-family: var(--chat-font);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1.5px solid var(--chat-primary);
+  background: rgba(210, 35, 42, 0.04);
+  color: var(--chat-primary);
+  line-height: 1.4;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.workflow-option-btn:hover {
+  background: var(--chat-primary);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--chat-primary) 30%, transparent);
+}
+
+.workflow-option-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* Selected option (already chosen) */
+.workflow-option-btn.selected {
+  background: var(--chat-primary-gradient);
+  color: #fff;
+  border-color: transparent;
+  cursor: default;
+  pointer-events: none;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chat-primary-dark) 25%, transparent);
+}
+
+/* Disabled unselected options */
+.workflow-option-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  filter: grayscale(0.3);
+}
+
+/* Direct-answer bubble */
+.workflow-answer {
+  align-self: flex-start;
+  max-width: 82%;
+  background: var(--chat-primary-gradient);
+  color: var(--chat-bot-text);
+  border-radius: 18px 18px 18px 4px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chat-primary-dark) 25%, transparent);
+  animation: messageIn 0.35s var(--chat-transition);
+}
+
+.workflow-answer .message-header {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Predefined variable value display */
+.workflow-variable-value {
+  align-self: flex-start;
+  max-width: 82%;
+  background: var(--chat-primary-gradient);
+  color: var(--chat-bot-text);
+  border-radius: 18px 18px 18px 4px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--chat-primary-dark) 25%, transparent);
+  animation: messageIn 0.35s var(--chat-transition);
+}
+
+.workflow-variable-value .message-header {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* User's selection echo */
+.workflow-user-choice {
+  align-self: flex-end;
+  background-color: var(--chat-user-bubble);
+  color: var(--chat-user-text);
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-width: 82%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  animation: messageIn 0.35s var(--chat-transition);
+}
+
+.workflow-user-choice .message-header {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Small icon inside option buttons */
+.workflow-option-btn .wf-icon {
+  font-size: 11px;
+  opacity: 0.7;
+}
