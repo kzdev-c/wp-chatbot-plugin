@@ -60,9 +60,16 @@
                         <div class="settings-field" style="width: 100%;">
                             <label for="preferred-module">Preferred Module</label>
                             <select id="preferred-module" name="preferred_module">
-                                <option disabled>Select Module</option>
-                                <option value="web_scrapper" <?php if (get_option('preferred_module') == 'web_scrapper') echo 'selected'; ?>>Web Scrapper</option>
-                                <option value="file_upload" <?php if (get_option('preferred_module') == 'file_upload') echo 'selected'; ?>>File Upload</option>
+                                <option disabled <?php if (!get_option('preferred_module')) echo 'selected'; ?>>Select Module</option>
+                                <?php 
+                                $opts_modules = get_option('chatbot_modules', []);
+                                if (in_array('web_scraper', $opts_modules)): 
+                                ?>
+                                    <option value="web_scrapper" <?php if (get_option('preferred_module') == 'web_scrapper') echo 'selected'; ?>>Web Scrapper</option>
+                                <?php endif; ?>
+                                <?php if (in_array('file_chatbot', $opts_modules)): ?>
+                                    <option value="file_upload" <?php if (get_option('preferred_module') == 'file_upload') echo 'selected'; ?>>File Upload</option>
+                                <?php endif; ?>
                             </select>
                         </div>
                     </div>
@@ -152,7 +159,7 @@
                     </div>
                     <div id="chatbot-response" class="settings-response"></div>
                     <button type="button" class="settings-btn settings-btn-primary" id="submit-btn" style="width:100%">
-                        <span class="dashicons dashicons-yes-alt"></span> Save & Connect
+                        <span class="dashicons dashicons-update"></span> Sync
                     </button>
                 </div>
             </div>

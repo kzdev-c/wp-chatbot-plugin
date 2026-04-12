@@ -120,7 +120,7 @@ jQuery(document).ready(function ($) {
 
         var $btn = $(this);
         var originalHtml = $btn.html();
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Connecting…');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Syncing…');
 
         $.ajax({
             url: checkCredentialsAjax.ajaxurl,
@@ -157,6 +157,19 @@ jQuery(document).ready(function ($) {
                     var files = parsed.files || [];
                     renderFiles(files);
                     $('#files-card').show();
+
+                    // Update preferred module select dynamically
+                    var currentPref = preferredModuleSelect.val();
+                    preferredModuleSelect.find('option:not(:disabled)').remove();
+                    if (modules.indexOf('web_scraper') !== -1) {
+                        preferredModuleSelect.append('<option value="web_scrapper">Web Scrapper</option>');
+                    }
+                    if (modules.indexOf('file_chatbot') !== -1) {
+                        preferredModuleSelect.append('<option value="file_upload">File Upload</option>');
+                    }
+                    if (currentPref) {
+                        preferredModuleSelect.val(currentPref);
+                    }
 
                     // Check for live_chat module
                     var hasLiveChat = modules.indexOf('live_chat') !== -1;

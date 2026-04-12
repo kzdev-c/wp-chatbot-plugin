@@ -21,8 +21,9 @@ function chatbot_add_admin_menu()
         'chatbot_settings_page'
     );
 
-    // Only show Web Scraping page when web_scrapper module is selected
-    if (get_option('preferred_module', 'web_scrapper') !== 'file_upload') {
+    // Only show Web Scraping page when web_scrapper module is selected and they have the module
+    $opts_modules = get_option('chatbot_modules', []);
+    if (in_array('web_scraper', $opts_modules) && get_option('preferred_module', 'web_scrapper') !== 'file_upload') {
         add_submenu_page(
             'chatbot_settings',
             __('Web Scraping', 'chatbot-plugin'),
