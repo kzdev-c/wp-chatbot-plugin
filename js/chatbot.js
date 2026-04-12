@@ -33,6 +33,36 @@ jQuery(document).ready(function ($) {
     let workflowConversation = []; // Conversation history [{sender, message}]
     let workflowLoaded = false;    // Whether we've attempted to load the workflow
 
+    function setWorkflowActive(isActive) {
+        workflowActive = isActive;
+        const inputContainer = $('#chatbot-input-container');
+        
+        if (isActive) {
+            // Hide input controls natively for a cleaner UX
+            inputContainer.find('#codeness-chatbot-input, .language-selector, #codeness-chatbot-mic, #codeness-chatbot-send').hide();
+            
+            // Inject or show a clean notice text
+            if (inputContainer.find('.workflow-notice').length === 0) {
+                inputContainer.prepend('<div class="workflow-notice" style="flex:1; text-align:center; font-size:13px; color:#9ca3b4; font-weight:500;">Please select an option above</div>');
+            } else {
+                inputContainer.find('.workflow-notice').show();
+            }
+        } else {
+            // Restore normal chat inputs
+            inputContainer.find('.workflow-notice').hide();
+            if ($('#chat-rating-box').length === 0) {
+                inputContainer.find('#codeness-chatbot-input, .language-selector, #codeness-chatbot-send').show();
+                if (!isLiveChatMode) {
+                    inputContainer.find('#codeness-chatbot-mic').show();
+                }
+                // Clear any leftover disabled props from previous versions
+                inputField.prop('disabled', false).attr('placeholder', 'Type your message...');
+                sendButton.prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+                $('#codeness-chatbot-mic').prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
+            }
+        }
+    }
+
     function playNotificationSound() {
         try {
             const context = new (window.AudioContext || window.webkitAudioContext)();
@@ -86,6 +116,13 @@ jQuery(document).ready(function ($) {
     function saveChatHistory() {
         const sid = getSessionId();
         if (!sid) return;
+
+        // Do not save history if workflow is running but user hasn't interacted
+        if (typeof workflowActive !== 'undefined' && workflowActive && typeof workflowConversation !== 'undefined' && workflowConversation.length <= 1) {
+            localStorage.removeItem('cb_history_' + sid);
+            return;
+        }
+
         // Clone to strip out temporary UI elements
         let tempContainer = messagesContainer.clone();
         tempContainer.find('.loading-message, #agent-typing-indicator, #chat-rating-box').remove();
@@ -95,6 +132,13 @@ jQuery(document).ready(function ($) {
     function saveWorkflowState() {
         const sid = getSessionId();
         if (!sid) return;
+
+        // Do not save state if user hasn't interacted
+        if (workflowActive && workflowConversation.length <= 1) {
+            localStorage.removeItem('cb_workflow_' + sid);
+            return;
+        }
+
         const state = {
             active: workflowActive,
             nodeId: workflowNodeId,
@@ -113,7 +157,7 @@ jQuery(document).ready(function ($) {
             const state = JSON.parse(saved);
             if (state && state.workflow) {
                 workflowData = state.workflow;
-                workflowActive = state.active || false;
+                setWorkflowActive(state.active || false);
                 workflowNodeId = state.nodeId || null;
                 workflowConversation = state.conversation || [];
                 return { restored: true, active: workflowActive };
@@ -128,7 +172,7 @@ jQuery(document).ready(function ($) {
         const sid = getSessionId();
         if (sid) localStorage.removeItem('cb_workflow_' + sid);
         workflowData = null;
-        workflowActive = false;
+        setWorkflowActive(false);
         workflowNodeId = null;
         workflowConversation = [];
         workflowLoaded = false;
@@ -853,7 +897,7 @@ jQuery(document).ready(function ($) {
         if (!node) {
             chat_clog('[Workflow] Node not found:', nodeId);
             appendSystemMessage('Workflow step not found.');
-            workflowActive = false;
+            setWorkflowActive(false);
             saveWorkflowState();
             return;
         }
@@ -947,7 +991,7 @@ jQuery(document).ready(function ($) {
                 `);
                 scrollToBottom();
                 // Workflow terminates here
-                workflowActive = false;
+                setWorkflowActive(false);
                 saveWorkflowState();
                 break;
 
@@ -966,13 +1010,13 @@ jQuery(document).ready(function ($) {
                 `);
                 scrollToBottom();
                 // Workflow terminates here
-                workflowActive = false;
+                setWorkflowActive(false);
                 saveWorkflowState();
                 break;
 
             case 'ai_continuation':
                 // Switch to AI flow - compile workflow conversation as context
-                workflowActive = false;
+                setWorkflowActive(false);
                 clearWorkflowState();
                 appendSystemMessage('Switching to AI assistant...');
                 
@@ -1010,7 +1054,7 @@ jQuery(document).ready(function ($) {
 
             case 'live_chat':
                 // Switch to live chat - send workflow conversation as history
-                workflowActive = false;
+                setWorkflowActive(false);
                 clearWorkflowState();
 
                 // Check agent availability first
@@ -1051,13 +1095,13 @@ jQuery(document).ready(function ($) {
             case 'dynamic_api':
                 appendSystemMessage('Loading data...');
                 // Dynamic API calls would be handled here
-                workflowActive = false;
+                setWorkflowActive(false);
                 saveWorkflowState();
                 break;
 
             default:
                 chat_clog('[Workflow] Unknown option type:', opt.type);
-                workflowActive = false;
+                setWorkflowActive(false);
                 saveWorkflowState();
                 break;
         }
@@ -1144,7 +1188,7 @@ jQuery(document).ready(function ($) {
 
                     if (parsed.success && parsed.workflow) {
                         workflowData = parsed.workflow;
-                        workflowActive = true;
+                        setWorkflowActive(true);
                         workflowLoaded = true;
                         workflowConversation = [];
 
@@ -1154,7 +1198,7 @@ jQuery(document).ready(function ($) {
                             renderWorkflowNode(rootNodeId);
                         } else {
                             chat_clog('[Workflow] No root_node_id found.');
-                            workflowActive = false;
+                            setWorkflowActive(false);
                         }
                     }
                 } catch (e) {
@@ -1188,7 +1232,7 @@ jQuery(document).ready(function ($) {
         // If currently in workflow mode and user types a message, switch to AI mode
         if (workflowActive) {
             chat_clog('[Workflow] User typed a message, breaking out of workflow.');
-            workflowActive = false;
+            setWorkflowActive(false);
             clearWorkflowState();
             
             // Build the conversational context from the workflow
