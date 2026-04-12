@@ -2,12 +2,22 @@
 /**
  * Reusable HTTP helper for the Chatbot Plugin.
  *
- * Wraps cURL boiler-plate into a single function so every call-site only
+ * Wraps cURL boilerplate into a single function so every call-site only
  * needs to provide method, URL, and (optionally) a body + extra headers.
  *
+ * Debugging is handled by the KZ Debugger plugin (kz-debugger).
+ * When that plugin is active and KZ_DEBUG is true, every API call is
+ * automatically logged to the browser debug panel via kzlog() / kz_push_api_entry().
+ */
+
+/* ───────────────────────────────────────────────
+ *  chatbot_api_request()
+ * ─────────────────────────────────────────────── */
+
+/**
  * @param string      $method   HTTP method (GET, POST, PUT, DELETE …).
  * @param string      $url      Fully-qualified API endpoint URL.
- * @param array|null  $body     Associative array for the request body (JSON-encoded automatically). Pass null for GET.
+ * @param array|null  $body     Associative array for the request body (JSON-encoded). null for GET.
  * @param array       $headers  Additional HTTP headers (merged with defaults).
  * @param int         $timeout  Request timeout in seconds (default 30).
  *
@@ -26,7 +36,6 @@ function chatbot_api_request( $method, $url, $body = null, $headers = [], $timeo
         'Accept: application/json',
     ];
 
-    // Merge caller-supplied headers (caller can override defaults by key)
     $merged_headers = array_unique( array_merge( $default_headers, $headers ) );
 
     $curl_opts = [
@@ -46,16 +55,8 @@ function chatbot_api_request( $method, $url, $body = null, $headers = [], $timeo
         $curl_opts[ CURLOPT_POSTFIELDS ] = json_encode( $body );
     }
 
-    $debug = defined( 'CHATBOT_DEBUG' ) && CHATBOT_DEBUG;
-
-    // ── Debug: log outgoing request ──
-    if ( $debug ) {
-        error_log( '[Chatbot DEBUG] ── REQUEST ──' );
-        error_log( '[Chatbot DEBUG] Method : ' . strtoupper( $method ) );
-        error_log( '[Chatbot DEBUG] URL    : ' . $url );
-        error_log( '[Chatbot DEBUG] Body   : ' . ( $body !== null ? json_encode( $body ) : '(none)' ) );
-        error_log( '[Chatbot DEBUG] Timeout: ' . $timeout . 's' );
-    }
+    $debug      = function_exists( 'kz_push_api_entry' );
+    $start_time = $debug ? microtime( true ) : 0;
 
     $curl = curl_init();
     curl_setopt_array( $curl, $curl_opts );
@@ -63,43 +64,61 @@ function chatbot_api_request( $method, $url, $body = null, $headers = [], $timeo
     $response  = curl_exec( $curl );
     $http_code = curl_getinfo( $curl, CURLINFO_HTTP_CODE );
 
+    $duration_ms = $debug ? round( ( microtime( true ) - $start_time ) * 1000 ) : 0;
+
+    /* ── cURL error path ── */
     if ( $response === false ) {
         $error = curl_error( $curl );
         curl_close( $curl );
 
-        $result = [
+        if ( $debug ) {
+            kz_push_api_entry( [
+                'method'        => strtoupper( $method ),
+                'url'           => $url,
+                'request_body'  => $body,
+                'timeout'       => $timeout,
+                'success'       => false,
+                'http_code'     => 0,
+                'response_body' => null,
+                'error'         => $error,
+                'duration_ms'   => $duration_ms,
+            ] );
+            
+        }
+
+        return [
             'success'   => false,
             'http_code' => 0,
             'raw'       => '',
             'data'      => null,
             'error'     => $error,
         ];
-
-        // ── Debug: log error ──
-        if ( $debug ) {
-            error_log( '[Chatbot DEBUG] ── RESPONSE (ERROR) ──' );
-            error_log( '[Chatbot DEBUG] cURL Error: ' . $error );
-        }
-
-        return $result;
     }
 
+    /* ── Success path ── */
     curl_close( $curl );
 
-    $result = [
+    $decoded = json_decode( $response, true );
+
+    if ( $debug ) {
+        kz_push_api_entry( [
+            'method'        => strtoupper( $method ),
+            'url'           => $url,
+            'request_body'  => $body,
+            'timeout'       => $timeout,
+            'success'       => true,
+            'http_code'     => $http_code,
+            'response_body' => $decoded,
+            'error'         => '',
+            'duration_ms'   => $duration_ms,
+        ] );
+    }
+
+    return [
         'success'   => true,
         'http_code' => $http_code,
         'raw'       => $response,
-        'data'      => json_decode( $response, true ),
+        'data'      => $decoded,
         'error'     => '',
     ];
-
-    // ── Debug: log success ──
-    if ( $debug ) {
-        error_log( '[Chatbot DEBUG] ── RESPONSE (OK) ──' );
-        error_log( '[Chatbot DEBUG] HTTP Code: ' . $http_code );
-        error_log( '[Chatbot DEBUG] Response : ' . $response );
-    }
-
-    return $result;
 }
