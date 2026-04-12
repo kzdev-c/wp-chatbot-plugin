@@ -33,11 +33,12 @@ function chatbot_enqueue_scripts($hook)
         plugin_dir_url(__FILE__) . '../css/chatbot.css'
     );
 
+    // Main chatbot logic - enqueued as a module
     wp_enqueue_script(
         'chatbot-js',
         plugin_dir_url(__FILE__) . '../js/chatbot.js',
         ['jquery', 'my-reverb-client'],
-        '1.1',
+        '1.2',
         true
     );
 
@@ -214,3 +215,13 @@ add_action('admin_enqueue_scripts', 'chatbot_enqueue_scripts');
 add_action('wp_enqueue_scripts', 'chatbot_enqueue_scripts');
 add_action('wp_enqueue_scripts', 'load_font_awesome');
 add_action('wp_enqueue_scripts', 'chatbot_inject_appearance_css');
+
+/**
+ * Filter to enable ES module support for chatbot.js
+ */
+add_filter('script_loader_tag', function($tag, $handle, $src) {
+    if ('chatbot-js' === $handle) {
+        return '<script type="module" src="' . esc_url($src) . '" id="chatbot-js-js"></script>';
+    }
+    return $tag;
+}, 10, 3);
