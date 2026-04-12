@@ -1,5 +1,6 @@
 <?php
-$question = sanitize_text_field($_POST['question']);
+$question = isset($_POST['question']) ? sanitize_textarea_field(wp_unslash($_POST['question'])) : '';
+$history = isset($_POST['history']) ? wp_unslash($_POST['history']) : '';
 
 $token = get_option('chatbot_token');
 
@@ -35,6 +36,10 @@ $post_data = [
     'token' => $token,
     'username' => get_option('chatbot_username'),
 ];
+
+if (!empty($history)) {
+    $post_data['history'] = $history;
+}
 
 // Execute the API request
 $result = chatbot_api_request('POST', $api_url, $post_data);

@@ -332,8 +332,41 @@ jQuery(document).ready(function ($) {
         this.style.height = (this.scrollHeight) + 'px';
     });
 
+    function getConversationHistory() {
+        let conversations = [];
+        if (workflowConversation && workflowConversation.length > 0) {
+            conversations = workflowConversation.slice();
+        } else {
+            $('#codeness-chatbot-messages .chatbot-message').each(function() {
+                if ($(this).hasClass('system-message') || $(this).hasClass('loading-message') || $(this).find('.prompt-buttons').length > 0) {
+                    return;
+                }
+                
+                if ($(this).hasClass('agent-message')) {
+                    return;
+                }
+
+                if ($(this).hasClass('workflow-node')) {
+                    let text = $(this).find('.workflow-question .message-content').text().trim();
+                    if (text) conversations.push({ sender: 'aibot', message: text });
+                    return;
+                }
+
+                let text = $(this).find('.message-content').text().trim();
+                if (!text) return; // skip empty
+
+                let sender = ($(this).hasClass('user-message') || $(this).hasClass('workflow-user-choice')) ? 'visitor' : 'aibot';
+                conversations.push({
+                    sender: sender,
+                    message: text
+                });
+            });
+        }
+        return conversations;
+    }
+
     // ===== Live Chat Mode UI Updates =====
-    function enterLiveChatMode(silent) {
+    function enterLiveChatMode(silent, passedConversations = null) {
         isLiveChatMode = true;
         liveChatSessionId = getSessionId();
 
@@ -348,34 +381,7 @@ jQuery(document).ready(function ($) {
         if (!silent) {
             appendSystemMessage("You're now chatting with a live agent. Let us know how we can help!");
             
-            let conversations = [];
-
-            // If we have a workflow conversation history, use that directly
-            if (workflowConversation && workflowConversation.length > 0) {
-                conversations = workflowConversation.slice();
-            } else {
-                // Scrape from DOM (standard AI messages)
-                $('#codeness-chatbot-messages .chatbot-message').each(function() {
-                    // Skip system, loading, workflow containers, and prompt buttons
-                    if ($(this).hasClass('system-message') || $(this).hasClass('loading-message') || $(this).hasClass('workflow-node') || $(this).find('.prompt-buttons').length > 0) {
-                        return;
-                    }
-                    
-                    // Agent messages shouldn't be here since it's a new session, but just in case
-                    if ($(this).hasClass('agent-message')) {
-                        return;
-                    }
-
-                    let text = $(this).find('.message-content').text().trim();
-                    if (!text) return; // skip empty
-
-                    let sender = ($(this).hasClass('user-message') || $(this).hasClass('workflow-user-choice')) ? 'visitor' : 'aibot';
-                    conversations.push({
-                        sender: sender,
-                        message: text
-                    });
-                });
-            }
+            let conversations = passedConversations || getConversationHistory();
 
             if (conversations.length > 0) {
                 $.ajax({
@@ -386,7 +392,7 @@ jQuery(document).ready(function ($) {
                         session_id: liveChatSessionId,
                         conversations: conversations,
                         agentId: agentId,
-                        type: (workflowConversation && workflowConversation.length > 0) ? 'workflow' : 'ai'
+                        type: (passedConversations || (workflowConversation && workflowConversation.length > 0)) ? 'workflow' : 'ai'
                     },
                     success: function() {
                         chat_clog('[LiveChat] AI history sent successfully.');
@@ -1036,24 +1042,24 @@ jQuery(document).ready(function ($) {
                 appendSystemMessage('Switching to AI assistant...');
                 break;
 
-            case 'ai_continuation':
-                // Switch to AI flow - compile workflow conversation as context
+            case 'ai_continuation': {
+                // Compile conversation history before clearing state
+                let aiConvos = getConversationHistory();
+                let contextMsgStr = JSON.stringify(aiConvos);
+
+                // Switch to AI flow
                 setWorkflowActive(false);
                 clearWorkflowState();
                 appendSystemMessage('Switching to AI assistant...');
                 
-                // Send the workflow conversation as a compact context message to the AI
-                let contextMsg = workflowConversation.map(c => {
-                    return (c.sender === 'visitor' ? 'User' : 'Bot') + ': ' + c.message;
-                }).join('\n');
-                
-                // Auto-send a summary to the AI so it has context
+                // Auto-send a summary to the AI so it has context in JSON format
                 $.ajax({
                     url: chatbotAjax.ajaxurl,
                     method: 'POST',
                     data: {
                         action: 'ask_question',
-                        question: 'The user went through a guided workflow. Here is the conversation so far:\n' + contextMsg + '\n\nPlease continue assisting the user based on this context. Greet them and ask how else you can help.'
+                        question: 'Please continue assisting the user based on the provided conversation history. Greet them and ask how else you can help.',
+                        history: contextMsgStr
                     },
                     success: function (response) {
                         try {
@@ -1073,9 +1079,13 @@ jQuery(document).ready(function ($) {
                     }
                 });
                 break;
+            }
 
-            case 'live_chat':
-                // Switch to live chat - send workflow conversation as history
+            case 'live_chat': {
+                // Grab conversation before clearing state
+                let livechatConvos = getConversationHistory();
+                
+                // Switch to live chat
                 setWorkflowActive(false);
                 clearWorkflowState();
 
@@ -1099,7 +1109,7 @@ jQuery(document).ready(function ($) {
                                 }
                                 const shouldHandoff = String(parsed.response.livechat).toLowerCase() === 'true';
                                 if (shouldHandoff) {
-                                    enterLiveChatMode();
+                                    enterLiveChatMode(false, livechatConvos);
                                 } else {
                                     appendSystemMessage(parsed.response.response || 'No agents available at the moment.');
                                 }
@@ -1113,6 +1123,7 @@ jQuery(document).ready(function ($) {
                     }
                 });
                 break;
+            }
 
             case 'dynamic_api':
                 appendSystemMessage('Loading data...');
@@ -1251,20 +1262,19 @@ jQuery(document).ready(function ($) {
             return;
         }
 
+        let historyStr = "";
+
         // If currently in workflow mode and user types a message, switch to AI mode
         if (workflowActive) {
             chat_clog('[Workflow] User typed a message, breaking out of workflow.');
+            let aiConvos = getConversationHistory();
+            if (aiConvos && aiConvos.length > 0) {
+                historyStr = JSON.stringify(aiConvos);
+            }
             setWorkflowActive(false);
             clearWorkflowState();
             appendSystemMessage('Switching to AI assistant...');
-            
-            // Build the conversational context from the workflow
-            if (workflowConversation && workflowConversation.length > 0) {
-                let contextMsg = workflowConversation.map(c => {
-                    return (c.sender === 'visitor' ? 'User' : 'Bot') + ': ' + c.message;
-                }).join('\n');
-                question = `The user went through a guided workflow and then typed a message. Workflow context so far:\n${contextMsg}\n\nUser message: ${originalQuestion}`;
-            }
+            question = originalQuestion;
         }
 
         // Otherwise, use the AI chatbot
@@ -1290,7 +1300,8 @@ jQuery(document).ready(function ($) {
             method: 'POST',
             data: {
                 action: 'ask_question',
-                question: question
+                question: question,
+                history: historyStr
             },
             success: function (response) {
                 try {
