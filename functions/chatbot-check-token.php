@@ -18,30 +18,13 @@ if (isset($_POST['livechat_secret_key'])) {
 
 $api_base = rtrim($dashboard_url, '/');
 
-$curl = curl_init();
-
-curl_setopt_array($curl, [
-    CURLOPT_URL            => $api_base . '/api/check-user-credentials',
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_ENCODING => '',
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 0,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => 'POST',
-    CURLOPT_POSTFIELDS => json_encode([
-        'username' => $username,
-        'token'    => $token,
-        'livechat_secret_key' => $livechat_secret_key
-    ]),
-    CURLOPT_HTTPHEADER     => [
-        'Content-Type: application/json',
-    ],
+$api_result = chatbot_api_request('POST', $api_base . '/api/check-user-credentials', [
+    'username'           => $username,
+    'token'              => $token,
+    'livechat_secret_key' => $livechat_secret_key
 ]);
 
-$response = curl_exec($curl);
-$response_data = json_decode($response, true);
+$response_data = $api_result['data'];
 
 $result = [
     'success' => false,
@@ -100,5 +83,4 @@ if ($response_data && isset($response_data['valid'])) {
 
 echo json_encode($result);
 
-curl_close($curl);
 wp_die();

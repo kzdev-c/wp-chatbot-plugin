@@ -27,33 +27,12 @@ $post_data = [
     'sender_type' => 'visitor',
 ];
 
-$curl = curl_init();
+$result = chatbot_api_request('POST', $api_url, $post_data, [], 10);
 
-curl_setopt_array($curl, [
-    CURLOPT_URL            => $api_url,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_ENCODING       => '',
-    CURLOPT_MAXREDIRS      => 10,
-    CURLOPT_TIMEOUT        => 10,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST  => 'POST',
-    CURLOPT_POSTFIELDS     => json_encode($post_data),
-    CURLOPT_HTTPHEADER     => [
-        'Content-Type: application/json',
-        'Accept: application/json',
-    ],
-]);
-
-$response = curl_exec($curl);
-
-if ($response === false) {
-    echo json_encode(['error' => curl_error($curl)]);
+if (!$result['success']) {
+    echo json_encode(['error' => $result['error']]);
 } else {
-    $decoded = json_decode($response, true);
-    echo json_encode(['success' => true, 'data' => $decoded]);
+    echo json_encode(['success' => true, 'data' => $result['data']]);
 }
 
-curl_close($curl);
 wp_die();

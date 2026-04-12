@@ -46,42 +46,13 @@ if (isset($_POST['agentId']) && !empty($_POST['agentId'])) {
     $post_data['agentId'] = intval($_POST['agentId']);
 }
 
-// DEBUG: Log request details
-error_log('[LiveChat DEBUG] URL: ' . $api_url);
-error_log('[LiveChat DEBUG] Post Data: ' . json_encode($post_data));
+$result = chatbot_api_request('POST', $api_url, $post_data);
 
-$curl = curl_init();
 
-curl_setopt_array($curl, [
-    CURLOPT_URL            => $api_url,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_ENCODING       => '',
-    CURLOPT_MAXREDIRS      => 10,
-    CURLOPT_TIMEOUT        => 30,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST  => 'POST',
-    CURLOPT_POSTFIELDS     => json_encode($post_data),
-    CURLOPT_HTTPHEADER     => [
-        'Content-Type: application/json',
-        'Accept: application/json',
-    ],
-]);
-
-$response = curl_exec($curl);
-print_r($response);
-$http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-
-// DEBUG: Log response
-error_log('[LiveChat DEBUG] HTTP Code: ' . $http_code);
-error_log('[LiveChat DEBUG] Raw Response: ' . $response);
-
-if ($response === false) {
-    $error_msg = curl_error($curl);
-    echo json_encode(['error' => 'Live chat error: ' . $error_msg]);
+if (!$result['success']) {
+    echo json_encode(['error' => 'Live chat error: ' . $result['error']]);
 } else {
-    $decoded_response = json_decode($response, true);
+    $decoded_response = $result['data'];
     if (isset($decoded_response['error'])) {
         echo json_encode(['error' => 'Live chat API error: ' . $decoded_response['error']]);
     } else {
@@ -92,5 +63,4 @@ if ($response === false) {
     }
 }
 
-curl_close($curl);
 wp_die();

@@ -16,7 +16,7 @@ if ($chat_mode === 'livechat_only') {
     echo json_encode([
         "response" => [
             "prompt_message" => "Live chat is enabled. Would you like to share your contact details so our team can assist you directly?",
-            "response" => "You’re currently connected to live support.",
+            "response" => "You're currently connected to live support.",
             "visitor_id" => session_id() ?: "visitor",
             "visitor_prompt" => true,
             "enter_live_chat" => true,
@@ -33,33 +33,14 @@ $post_data = [
     'question' => $question,
 ];
 
-// Initialize cURL
-$curl = curl_init();
-curl_setopt_array($curl, [
-    CURLOPT_URL            => $api_url,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_ENCODING       => '',
-    CURLOPT_MAXREDIRS      => 10,
-    CURLOPT_TIMEOUT        => 0,
-    CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST  => 'POST',
-    CURLOPT_POSTFIELDS     => json_encode($post_data),
-    CURLOPT_HTTPHEADER     => [
-        'Content-Type: application/json',
-    ],
-]);
-
-// Execute the cURL request and capture the response
-$response = curl_exec($curl);
+// Execute the API request
+$result = chatbot_api_request('POST', $api_url, $post_data);
 
 // Check for cURL errors
-if ($response === false) {
-    $error_msg = curl_error($curl);
-    echo json_encode(['error' => 'Error: ' . $error_msg]);
+if (!$result['success']) {
+    echo json_encode(['error' => 'Error: ' . $result['error']]);
 } else {
-    $decoded_response = json_decode($response, true);
+    $decoded_response = $result['data'];
     if (isset($decoded_response['error'])) {
         echo json_encode(['error' => 'Error from API: ' . $decoded_response['error']]);
     } else {
@@ -82,23 +63,8 @@ if ($response === false) {
                 $base_url  = defined('CHATBOT_DASHBOARD_API_BASE_URL') ? CHATBOT_DASHBOARD_API_BASE_URL : 'https://chatbot-dashboard.local';
                 $check_url = rtrim($base_url, '/') . '/api/livechat/check-agent-availability';
                 
-                $check_curl = curl_init();
-                curl_setopt_array($check_curl, [
-                    CURLOPT_URL            => $check_url,
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_SSL_VERIFYPEER => false,
-                    CURLOPT_CUSTOMREQUEST  => 'POST',
-                    CURLOPT_POSTFIELDS     => json_encode(['token' => $token]),
-                    CURLOPT_HTTPHEADER     => [
-                        'Content-Type: application/json',
-                        'Accept: application/json',
-                    ],
-                ]);
-                
-                $check_res = curl_exec($check_curl);
-                curl_close($check_curl);
-                
-                $agent_data = json_decode($check_res, true);
+                $check_result = chatbot_api_request('POST', $check_url, ['token' => $token]);
+                $agent_data = $check_result['data'];
                 
                 if (isset($agent_data['success']) && $agent_data['success'] === true && !empty($agent_data['agent_id'])) {
                     $decoded_response['agent_id'] = $agent_data['agent_id'];
@@ -116,7 +82,5 @@ if ($response === false) {
         echo json_encode(['response' => $decoded_response]);
     }
 }
-
-curl_close($curl);
 
 wp_die();
