@@ -38,3 +38,7 @@ export const sendAIHistoryToLiveChat = (sessionId, conversations, agentId, type)
         type
     });
 };
+
+export const getLiveChatMessages = (sessionId) => {
+    return apiRequest('livechat_get_messages', { session_id: sessionId });
+};

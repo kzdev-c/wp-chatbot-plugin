@@ -33,12 +33,11 @@ function chatbot_enqueue_scripts($hook)
         plugin_dir_url(__FILE__) . '../css/chatbot.css'
     );
 
-    // Main chatbot logic - enqueued as a module
     wp_enqueue_script(
         'chatbot-js',
         plugin_dir_url(__FILE__) . '../js/chatbot.js',
-        ['jquery', 'my-reverb-client'],
-        '1.2',
+        ['jquery', 'pusher-js'],
+        time(), // Cache-buster
         true
     );
 
@@ -99,10 +98,12 @@ function chatbot_enqueue_scripts($hook)
     }
 
     $ws_host = parse_url(CHATBOT_DASHBOARD_API_BASE_URL, PHP_URL_HOST) ?: 'chatbot-dashboard.local';
+    $ws_port = parse_url(CHATBOT_DASHBOARD_API_BASE_URL, PHP_URL_PORT) ?: 443;
 
     wp_localize_script('chatbot-js', 'chatbotAjax', [
         'ajaxurl'              => admin_url('admin-ajax.php'),
         'livechat_ws_host'     => $ws_host,
+        'livechat_ws_port'     => $ws_port,
         'livechat_secret_key'  => get_option('livechat_secret_key', ''),
         'botDisplayName'       => esc_html(get_option('chatbot_name', 'Bot')),
         'modules'              => get_option('chatbot_modules', []),

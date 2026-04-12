@@ -8,7 +8,7 @@ import { getSessionId, initUserTracking, getCookie, setCookie } from './modules/
 import { scrollToBottom, updateCounter as uiUpdateCounter, showChatbot, hideChatbot, appendSystemMessage } from './modules/ui.js';
 import { startWebSocket, stopWebSocket, showAgentTyping, hideAgentTyping } from './modules/livechat.js';
 import { getWorkflowNode, renderWorkflowNode } from './modules/workflow.js';
-import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat } from './modules/api.js';
+import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat, getLiveChatMessages } from './modules/api.js';
 import { initSpeechRecognition } from './modules/voice.js';
 import { renderRatingUI, fillStars, setLabel, getLabel } from './modules/rating.js';
 
@@ -36,6 +36,7 @@ jQuery(document).ready(function ($) {
     let isHistoryLoading = false;
     let typingThrottleTime = 0;
     let notTypingTimeout = null;
+    let recognition = null;
 
     let workflowData = null;
     let workflowActive = false;
@@ -138,6 +139,11 @@ jQuery(document).ready(function ($) {
         $('#codeness-chatbot-header span:first-of-type').text('Live Chat');
         chatbot.addClass('livechat-active');
         
+        localStorage.setItem('cb_livechat_' + liveChatSessionId, JSON.stringify({
+            liveChatId: liveChatId,
+            agentId: agentId
+        }));
+        
         if (recognition) recognition.stop();
         $('#codeness-chatbot-mic').prop('disabled', true).addClass('tts-disabled');
         $('#language-select').prop('disabled', true).addClass('tts-disabled');
@@ -170,6 +176,7 @@ jQuery(document).ready(function ($) {
 
     const exitLiveChatMode = () => {
         isLiveChatMode = false;
+        localStorage.removeItem('cb_livechat_' + getSessionId());
         liveChatId = null;
         lastMessageId = 0;
         chatbot.removeClass('livechat-active');
@@ -348,9 +355,42 @@ jQuery(document).ready(function ($) {
     const observer = new MutationObserver(() => saveChatHistory());
     observer.observe(messagesContainer[0], { childList: true, subtree: true, characterData: true });
 
-    initWorkflow();
+    let shouldResumeLiveChat = false;
+    const savedLc = localStorage.getItem('cb_livechat_' + sid);
+    if (savedLc) {
+        try {
+            const parsedLc = JSON.parse(savedLc);
+            if (parsedLc.liveChatId) {
+                liveChatId = parsedLc.liveChatId;
+                agentId = parsedLc.agentId || null;
+                shouldResumeLiveChat = true;
+            }
+        } catch (e) {}
+    }
 
-    const recognition = initSpeechRecognition($('#codeness-chatbot-mic'), inputField, $('#language-select'), {
+    if (shouldResumeLiveChat) {
+        enterLiveChatMode(true);
+        // Fetch any messages missed during page reload
+        getLiveChatMessages(sid).done(res => {
+            try {
+                const parsed = typeof res === 'string' ? JSON.parse(res) : res;
+                if (parsed.success && parsed.messages) {
+                    parsed.messages.forEach(msg => {
+                        if (msg.id > lastMessageId) {
+                            if (msg.sender_type === 'agent') {
+                                appendAgentMessage(msg.message || msg.content || '');
+                            }
+                            lastMessageId = msg.id;
+                        }
+                    });
+                }
+            } catch (e) { console.error('[LiveChat] Error loading messages:', e); }
+        });
+    } else {
+        initWorkflow();
+    }
+
+    recognition = initSpeechRecognition($('#codeness-chatbot-mic'), inputField, $('#language-select'), {
         onEnd: () => { }
     });
 
@@ -478,6 +518,7 @@ jQuery(document).ready(function ($) {
         } else {
             const s = getSessionId();
             localStorage.removeItem('cb_history_' + s);
+            localStorage.removeItem('cb_livechat_' + s);
             sessionStorage.removeItem('chatbot_livechat_session_id');
             document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             clearWorkflowState();
@@ -526,6 +567,7 @@ jQuery(document).ready(function ($) {
             setTimeout(() => {
                 const s = getSessionId();
                 localStorage.removeItem('cb_history_' + s);
+                localStorage.removeItem('cb_livechat_' + s);
                 sessionStorage.removeItem('chatbot_livechat_session_id');
                 document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                 window.location.reload();

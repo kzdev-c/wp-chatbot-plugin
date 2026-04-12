@@ -11,15 +11,27 @@ let liveChatChannel = null;
 let agentTypingTimeout = null;
 
 export const startWebSocket = (liveChatId, config, handlers) => {
-    if (!liveChatId || !config.livechat_secret_key) return;
+    if (!liveChatId || !config.livechat_secret_key) {
+        console.warn('[LiveChat] Missing liveChatId or secret key', { liveChatId, key: config.livechat_secret_key });
+        return;
+    }
 
     if (!pusherInstance) {
+        const wsPort = parseInt(config.livechat_ws_port) || 443;
+        console.log('[LiveChat] Connecting WebSocket:', {
+            host: config.livechat_ws_host,
+            port: wsPort,
+            key: config.livechat_secret_key,
+            channel: `livechat.${liveChatId}`
+        });
+
         pusherInstance = new Pusher(config.livechat_secret_key, {
             cluster: 'mt1',
             wsHost: config.livechat_ws_host,
-            wsPort: 443,
-            wssPort: 443,
+            wsPort: wsPort,
+            wssPort: wsPort,
             forceTLS: true,
+            disableStats: true,
             enabledTransports: ["ws", "wss"],
         });
 
