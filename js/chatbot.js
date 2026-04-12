@@ -37,7 +37,17 @@ jQuery(document).ready(function ($) {
         workflowActive = isActive;
         const inputContainer = $('#chatbot-input-container');
         
-        if (isActive) {
+        let hideInputs = isActive;
+        
+        // Always show inputs if workflow is active but the current node has NO options to select
+        if (isActive && workflowNodeId && workflowData && workflowData.nodes) {
+            const currentNode = workflowData.nodes.find(n => n.id === workflowNodeId);
+            if (currentNode && (!currentNode.options || currentNode.options.length === 0)) {
+                hideInputs = false;
+            }
+        }
+        
+        if (hideInputs) {
             // Hide input controls natively for a cleaner UX
             inputContainer.find('#codeness-chatbot-input, .language-selector, #codeness-chatbot-mic, #codeness-chatbot-send').hide();
             
@@ -56,6 +66,8 @@ jQuery(document).ready(function ($) {
                     inputContainer.find('#codeness-chatbot-mic').show();
                 }
                 // Clear any leftover disabled props from previous versions
+                const inputField = $('#codeness-chatbot-input');
+                const sendButton = $('#codeness-chatbot-send');
                 inputField.prop('disabled', false).attr('placeholder', 'Type your message...');
                 sendButton.prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
                 $('#codeness-chatbot-mic').prop('disabled', false).css({'opacity': '1', 'cursor': 'pointer'});
@@ -904,6 +916,11 @@ jQuery(document).ready(function ($) {
 
         workflowNodeId = nodeId;
 
+        // Re-evaluate input displays in case the node has zero options
+        if (workflowActive) {
+            setWorkflowActive(true);
+        }
+
         // Track bot question in conversation
         workflowConversation.push({
             sender: 'aibot',
@@ -911,19 +928,22 @@ jQuery(document).ready(function ($) {
         });
         saveWorkflowState();
 
-        // Build the options HTML
-        let optionsHtml = '<div class="workflow-options">';
-        node.options.forEach(function (opt, idx) {
-            const dataAttrs = `data-type="${opt.type}" data-index="${idx}" data-node="${nodeId}"`;
-            let iconHtml = '';
-            if (opt.type === 'ai_continuation') {
-                iconHtml = '<span class="wf-icon"><i class="fas fa-robot"></i></span>';
-            } else if (opt.type === 'live_chat') {
-                iconHtml = '<span class="wf-icon"><i class="fas fa-headset"></i></span>';
-            }
-            optionsHtml += `<button class="workflow-option-btn" ${dataAttrs}>${iconHtml}${formatChatMessage(opt.label)}</button>`;
-        });
-        optionsHtml += '</div>';
+        // Build the options HTML safely
+        let optionsHtml = '';
+        if (node.options && node.options.length > 0) {
+            optionsHtml = '<div class="workflow-options">';
+            node.options.forEach(function (opt, idx) {
+                const dataAttrs = `data-type="${opt.type}" data-index="${idx}" data-node="${nodeId}"`;
+                let iconHtml = '';
+                if (opt.type === 'ai_continuation') {
+                    iconHtml = '<span class="wf-icon"><i class="fas fa-robot"></i></span>';
+                } else if (opt.type === 'live_chat') {
+                    iconHtml = '<span class="wf-icon"><i class="fas fa-headset"></i></span>';
+                }
+                optionsHtml += `<button class="workflow-option-btn" ${dataAttrs}>${iconHtml}${formatChatMessage(opt.label)}</button>`;
+            });
+            optionsHtml += '</div>';
+        }
 
         // Append the node UI
         messagesContainer.append(`
