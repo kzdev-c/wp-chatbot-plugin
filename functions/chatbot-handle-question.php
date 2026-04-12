@@ -17,7 +17,7 @@ if ($chat_mode === 'livechat_only') {
         "response" => [
             "prompt_message" => "Live chat is enabled. Would you like to share your contact details so our team can assist you directly?",
             "response" => "You're currently connected to live support.",
-            "visitor_id" => session_id() ?: "visitor",
+            "visitor_id" => session_id(),
             "visitor_prompt" => true,
             "enter_live_chat" => true,
             "livechat" => true
@@ -31,6 +31,9 @@ if ($chat_mode === 'livechat_only') {
 $api_url   = CHATBOT_API_BASE_URL . '/query_file';
 $post_data = [
     'question' => $question,
+    'visitor_id' => session_id(),
+    'token' => $token,
+    'username' => get_option('chatbot_username'),
 ];
 
 // Execute the API request
