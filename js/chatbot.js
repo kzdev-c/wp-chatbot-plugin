@@ -8,7 +8,7 @@ import { getSessionId, initUserTracking, getCookie, setCookie } from './modules/
 import { scrollToBottom, updateCounter as uiUpdateCounter, showChatbot, hideChatbot, appendSystemMessage } from './modules/ui.js';
 import { startWebSocket, stopWebSocket, showAgentTyping, hideAgentTyping } from './modules/livechat.js';
 import { getWorkflowNode, renderWorkflowNode } from './modules/workflow.js';
-import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat } from './modules/api.js';
+import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat, getLiveChatMessages } from './modules/api.js';
 import { initSpeechRecognition } from './modules/voice.js';
 import { renderRatingUI, fillStars, setLabel, getLabel } from './modules/rating.js';
 
@@ -406,6 +406,28 @@ jQuery(document).ready(function ($) {
 
     if (shouldResumeLiveChat) {
         enterLiveChatMode(true);
+        // Fetch any messages missed while the page was unloaded
+        getLiveChatMessages(sid).done(response => {
+            try {
+                const parsed = typeof response === 'string' ? JSON.parse(response) : response;
+                if (parsed.success && Array.isArray(parsed.messages)) {
+                    parsed.messages.forEach(msg => {
+                        if (msg.id && msg.id > lastMessageId && (msg.sender_type === 'agent' || msg.sender_type === 'system')) {
+                            appendAgentMessage(msg.message || msg.content || '');
+                            lastMessageId = msg.id;
+                        }
+                    });
+                    updateLiveChatState();
+                } else if (parsed.error) {
+                    // Chat was resolved/closed while away
+                    chat_clog('[LiveChat] Session no longer active:', parsed.error);
+                    appendSystemMessage(messagesContainer, 'The live chat session has ended.', formatChatMessage, scrollToBottom);
+                    const closedId = liveChatId;
+                    exitLiveChatMode();
+                    renderRatingUI(messagesContainer, closedId);
+                }
+            } catch (e) { chat_clog('[LiveChat] Error fetching missed messages:', e); }
+        });
     } else {
         initWorkflow();
     }
