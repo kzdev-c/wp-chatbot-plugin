@@ -4,7 +4,6 @@ jQuery(document).ready(function ($) {
     const tokenInput = $('#token');
     const usernameInput = $('#username');
     const preferredModuleSelect = $('#preferred-module');
-    const checkFilesBtn = $('#check-files-btn');
 
     /* ================================================================
        TOAST HELPER
@@ -18,6 +17,62 @@ jQuery(document).ready(function ($) {
     }
 
     /* ================================================================
+       MODULE LABEL HELPERS
+       ================================================================ */
+    var moduleLabels = {
+        database_chatbot: 'Database Chatbot',
+        file_chatbot:     'File Chatbot',
+        web_scraper:      'Web Scraper',
+        live_chat:        'Live Chat'
+    };
+
+    function getModuleLabel(mod) {
+        return moduleLabels[mod] || mod.replace(/_/g, ' ').replace(/\b\w/g, function (l) { return l.toUpperCase(); });
+    }
+
+    /* ================================================================
+       RENDER MODULES
+       ================================================================ */
+    function renderModules(modules) {
+        var $list = $('#modules-list');
+        $list.empty();
+
+        if (!modules || modules.length === 0) {
+            $list.html('<p class="modules-empty">No modules enabled.</p>');
+            return;
+        }
+
+        modules.forEach(function (mod) {
+            $list.append('<span class="module-tag">' + getModuleLabel(mod) + '</span>');
+        });
+    }
+
+    /* ================================================================
+       RENDER FILES
+       ================================================================ */
+    function renderFiles(files) {
+        var $list = $('#files-list');
+        var $count = $('#files-count');
+        $list.empty();
+
+        var total = files ? files.length : 0;
+        $count.text(total);
+
+        if (total === 0) {
+            $list.html('<p class="files-empty">No files uploaded.</p>');
+            return;
+        }
+
+        files.forEach(function (file) {
+            $list.append(
+                '<div class="file-item">' +
+                    '<span class="file-name">' + (file.file_name || 'Unknown') + '</span>' +
+                '</div>'
+            );
+        });
+    }
+
+    /* ================================================================
        CHAT MODE SELECTOR
        ================================================================ */
     $('input[name="chat_mode"]').on('change', function () {
@@ -26,13 +81,6 @@ jQuery(document).ready(function ($) {
         // Update active class
         $('.chat-mode-option').removeClass('active');
         $(this).closest('.chat-mode-option').addClass('active');
-
-        // Show/hide live chat key container
-        if (mode === 'ai_only') {
-            $('#livechat-key-container').slideUp(250);
-        } else {
-            $('#livechat-key-container').slideDown(250);
-        }
 
         // Save immediately
         $.ajax({
@@ -44,7 +92,6 @@ jQuery(document).ready(function ($) {
             },
             success: function () {
                 showToast('Chat mode updated!', 'success');
-                // Update status display
                 var labels = { ai_only: 'AI Only', livechat_only: 'Live Chat Only', both: 'AI + Live Chat' };
                 $('.settings-status-row').last().find('strong').text(labels[mode] || mode);
             },
@@ -66,28 +113,14 @@ jQuery(document).ready(function ($) {
     checkInputs();
 
     /* ================================================================
-       CHECK FILES TOGGLE
-       ================================================================ */
-    function toggleCheckFilesButton() {
-        if (preferredModuleSelect.val() === 'file_upload') {
-            $('#check-files-container').show();
-        } else {
-            $('#check-files-container').hide();
-        }
-    }
-
-    preferredModuleSelect.on('change', toggleCheckFilesButton);
-    toggleCheckFilesButton();
-
-    /* ================================================================
-       SAVE CREDENTIALS
+       SAVE CREDENTIALS  (check token)
        ================================================================ */
     saveBtn.on('click', function (e) {
         e.preventDefault();
 
         var $btn = $(this);
         var originalHtml = $btn.html();
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Checking…');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Connecting…');
 
         $.ajax({
             url: checkCredentialsAjax.ajaxurl,
@@ -96,8 +129,7 @@ jQuery(document).ready(function ($) {
                 action: 'check_token',
                 token: tokenInput.val(),
                 username: usernameInput.val(),
-                chatbot_dashboard_url: $('#chatbot_dashboard_url').val(),
-                livechat_secret_key: $('#livechat_secret_key').val()
+                chatbot_dashboard_url: $('#chatbot_dashboard_url').val()
             },
             success: function (response) {
                 try {
@@ -116,33 +148,31 @@ jQuery(document).ready(function ($) {
                         $apiText.html('API: <em>Not configured</em>');
                     }
 
-                    var $livechatDot = $('#status-dot-livechat');
-                    var $livechatText = $('#status-text-livechat');
-                    if (parsed.livechat_secret_key_valid) {
-                        $livechatDot.addClass('active');
-                        $livechatText.html('Live Chat: <strong>Available</strong>');
-                    } else {
-                        $livechatDot.removeClass('active');
-                        $livechatText.html('Live Chat: <em>Invalid Secret key</em>');
-                    }
+                    // Render modules
+                    var modules = parsed.modules || [];
+                    renderModules(modules);
+                    $('#modules-card').show();
 
-                    // Toggle live chat availability
-                    if (parsed.has_livechat) {
-                        $('#livechat-status-container').show();
-                        $('#livechat-key-container').slideDown(250);
-                        $('#status-text-mode').html('Mode: <strong>AI + Live Chat</strong>');
+                    // Render files
+                    var files = parsed.files || [];
+                    renderFiles(files);
+                    $('#files-card').show();
+
+                    // Check for live_chat module
+                    var hasLiveChat = modules.indexOf('live_chat') !== -1;
+
+                    if (hasLiveChat) {
                         $('#chat-mode-both').prop('checked', true);
                         $('.chat-mode-option').removeClass('active');
                         $('#chat-mode-both').closest('.chat-mode-option').addClass('active');
-                        showToast('Credentials valid – Live Chat available! Mode set to AI + Live Chat.', 'success');
+                        showToast('Credentials valid – Live Chat enabled! Mode set to AI + Live Chat.', 'success');
                     } else {
-                        $('#livechat-status-container').hide();
-                        $('#livechat-key-container').slideUp(250);
-                        $('#status-text-mode').html('Mode: <strong>AI</strong>');
                         $('#chat-mode-ai').prop('checked', true);
                         $('.chat-mode-option').removeClass('active');
                         $('#chat-mode-ai').closest('.chat-mode-option').addClass('active');
-                        showToast('Live chat disabled. Mode set to AI.', 'success');
+                        if (parsed.success) {
+                            showToast('Credentials valid. Mode set to AI.', 'success');
+                        }
                     }
 
                 } catch (ex) {
@@ -186,31 +216,6 @@ jQuery(document).ready(function ($) {
     });
 
     /* ================================================================
-       CHECK FILES
-       ================================================================ */
-    checkFilesBtn.on('click', function () {
-        var $btn = $(this);
-        var originalHtml = $btn.html();
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update settings-spin"></span> Checking…');
-
-        $.ajax({
-            url: checkCredentialsAjax.ajaxurl,
-            type: 'POST',
-            data: { action: 'chatbot_check_files' },
-            success: function (response) {
-                $('#module-response').html(response).show();
-                showToast('File check completed.', 'success');
-            },
-            error: function (jqXHR, textStatus) {
-                showToast('Error checking files: ' + textStatus, 'error');
-            },
-            complete: function () {
-                $btn.prop('disabled', false).html(originalHtml);
-            }
-        });
-    });
-
-    /* ================================================================
        SAVE LIVE CHAT SETTINGS
        ================================================================ */
     $('#save-livechat-btn').on('click', function () {
@@ -227,7 +232,6 @@ jQuery(document).ready(function ($) {
             data: {
                 action: 'chatbot_livechat_settings_save',
                 chatbot_dashboard_url: $('#chatbot_dashboard_url').val(),
-                livechat_secret_key: $('#livechat_secret_key').val(),
                 ai_chat_enabled: ai_chat_enabled
             },
             success: function () {

@@ -26,10 +26,7 @@ function chatbot_settings()
     include plugin_dir_path(__FILE__) . '../functions/chatbot-choose-settings.php';
 }
 
-function chatbot_check_files()
-{
-    include plugin_dir_path(__FILE__) . '../functions/chatbot-check-files.php';
-}
+
 
 function chatbot_submit_visitor_info()
 {
@@ -54,7 +51,7 @@ add_action('wp_ajax_chatbot_file_upload', 'chatbot_file_upload');
 
 add_action('wp_ajax_chatbot_settings', 'chatbot_settings');
 
-add_action('wp_ajax_chatbot_check_files', 'chatbot_check_files');
+
 
 add_action('wp_ajax_submit_visitor_info', 'chatbot_submit_visitor_info');
 add_action('wp_ajax_nopriv_submit_visitor_info', 'chatbot_submit_visitor_info');

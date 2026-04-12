@@ -26,9 +26,6 @@
                     <p class="settings-card-desc">Choose how the chatbot operates for your visitors.</p>
                     <div class="chat-mode-options">
                         <?php 
-                        // ==========================================
-                        // PRESET CHAT MODE
-                        // ==========================================
                         $chat_mode = 'both'; 
                         ?>
                         <label class="chat-mode-option <?php echo $chat_mode === 'ai_only' ? 'active' : ''; ?>" for="chat-mode-ai">
@@ -69,13 +66,6 @@
                             </select>
                         </div>
                     </div>
-                    <div id="check-files-container" style="display:none;">
-                        <button type="button" class="settings-btn settings-btn-outline settings-btn-sm" id="check-files-btn">
-                            <span class="dashicons dashicons-media-text"></span> Check Files
-                        </button>
-                    </div>
-                    <div id="module-response" class="settings-response"></div>
-
                     <div class="settings-save-row">
                         <button type="button" class="settings-btn settings-btn-primary" id="save-general-btn">
                             <span class="dashicons dashicons-saved"></span> Save General Settings
@@ -84,7 +74,59 @@
                 </div>
             </div>
 
+            <!-- Enabled Modules -->
+            <div class="settings-card settings-card-modules" id="modules-card" style="<?php echo get_option('chatbot_token') ? '' : 'display:none;'; ?>">
+                <div class="settings-card-header">
+                    <h2><span class="dashicons dashicons-screenoptions"></span> Enabled Modules</h2>
+                </div>
+                <div class="settings-card-body" style="padding:14px 20px;">
+                    <div id="modules-list" class="modules-list">
+                        <?php
+                        $saved_modules = get_option('chatbot_modules', []);
+                        if (!empty($saved_modules) && is_array($saved_modules)) {
+                            $module_labels = [
+                                'database_chatbot' => 'Database Chatbot',
+                                'file_chatbot'     => 'File Chatbot',
+                                'web_scraper'      => 'Web Scraper',
+                                'live_chat'        => 'Live Chat',
+                            ];
+                            foreach ($saved_modules as $mod) {
+                                $label = isset($module_labels[$mod]) ? $module_labels[$mod] : ucwords(str_replace('_', ' ', $mod));
+                                echo '<span class="module-tag">' . esc_html($label) . '</span>';
+                            }
+                        } else {
+                            echo '<p class="modules-empty">No modules detected yet.</p>';
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Files -->
+            <div class="settings-card settings-card-files" id="files-card" style="<?php echo get_option('chatbot_token') ? '' : 'display:none;'; ?>">
+                <div class="settings-card-header settings-card-header-flex">
+                    <h2><span class="dashicons dashicons-media-default"></span> Files</h2>
+                    <?php
+                        $saved_files = get_option('chatbot_files', []);
+                        $files_count = !empty($saved_files) && is_array($saved_files) ? count($saved_files) : 0;
+                    ?>
+                    <span id="files-count" class="files-count-badge"><?php echo $files_count; ?></span>
+                </div>
+                <div class="settings-card-body" style="padding:10px 20px 16px;">
+                    <div id="files-list" class="files-list">
+                        <?php
+                        if ($files_count > 0) {
+                            foreach ($saved_files as $file) {
+                                $fname = isset($file['file_name']) ? $file['file_name'] : 'Unknown';
+                                echo '<div class="file-item"><span class="file-name">' . esc_html($fname) . '</span></div>';
+                            }
+                        } else {
+                            echo '<p class="files-empty">No files uploaded.</p>';
+                        }
+                        ?>
+                    </div>
+                </div>
+            </div>
 
         </div>
 
@@ -108,13 +150,9 @@
                         <label for="token">Token</label>
                         <input type="password" id="token" name="token" value="<?php echo esc_attr(get_option('chatbot_token')); ?>" required placeholder="••••••••" />
                     </div>
-                    <div class="settings-field" id="livechat-key-container" style="<?php echo (get_option('has_livechat') == '1') ? '' : 'display:none;'; ?>">
-                        <label for="livechat_secret_key">Live Chat Secret Key</label>
-                        <input type="password" id="livechat_secret_key" name="livechat_secret_key" value="<?php echo esc_attr(get_option('livechat_secret_key')); ?>" placeholder="••••••••" />
-                    </div>
                     <div id="chatbot-response" class="settings-response"></div>
                     <button type="button" class="settings-btn settings-btn-primary" id="submit-btn" style="width:100%">
-                        <span class="dashicons dashicons-yes-alt"></span> Check & Save Credentials
+                        <span class="dashicons dashicons-yes-alt"></span> Save & Connect
                     </button>
                 </div>
             </div>
@@ -125,17 +163,6 @@
                     <div class="settings-status-row">
                         <span id="status-dot-api" class="settings-status-dot <?php echo get_option('chatbot_token') ? 'active' : ''; ?>"></span>
                         <span id="status-text-api">API: <?php echo get_option('chatbot_token') ? '<strong>Connected</strong>' : '<em>Not configured</em>'; ?></span>
-                    </div>
-                    <div class="settings-status-row" id="livechat-status-container" style="<?php echo get_option('has_livechat') == '1' ? '' : 'display:none;'; ?>">
-                        <span id="status-dot-livechat" class="settings-status-dot <?php echo get_option('livechat_secret_key_valid') == '1' ? 'active' : ''; ?>"></span>
-                        <span id="status-text-livechat">Live Chat: <?php echo get_option('livechat_secret_key_valid') == '1' ? '<strong>Available</strong>' : '<em>Invalid Secret key</em>'; ?></span>
-                    </div>
-                    <div class="settings-status-row">
-                        <span class="settings-status-dot active"></span>
-                        <span id="status-text-mode">Mode: <strong><?php
-                                $m = get_option('chatbot_chat_mode', 'ai_only');
-                                echo $m === 'ai_only' ? 'AI' : ($m === 'livechat_only' ? 'Live Chat Only' : 'AI + Live Chat');
-                            ?></strong></span>
                     </div>
                 </div>
             </div>
