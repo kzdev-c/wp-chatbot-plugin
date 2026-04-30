@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit;
 function chatbot_handle_question()
 {
     // include plugin_dir_path(__FILE__) . '../functions/chatbot-handle-question-local-ai.php';
@@ -62,23 +62,25 @@ add_action('wp_ajax_chatbot_livechat_settings_save', 'chatbot_livechat_settings_
 add_action('wp_ajax_chatbot_save_chat_mode', 'chatbot_save_chat_mode');
 
 function chatbot_save_chat_mode() {
-    if (!current_user_can('manage_options')) {
-        wp_send_json_error('Unauthorized');
+    if ( ! current_user_can( 'manage_options' ) ) {
+        wp_send_json_error( 'Unauthorized' );
     }
 
-    $valid_modes = ['ai_only', 'livechat_only', 'both'];
-    $mode = isset($_POST['chat_mode']) ? sanitize_text_field($_POST['chat_mode']) : 'ai_only';
+    check_ajax_referer( 'chatbot_action', 'nonce' );
 
-    if (!in_array($mode, $valid_modes, true)) {
+    $valid_modes = [ 'ai_only', 'livechat_only', 'both' ];
+    $mode = isset( $_POST['chat_mode'] ) ? sanitize_text_field( wp_unslash( $_POST['chat_mode'] ) ) : 'ai_only';
+
+    if ( ! in_array( $mode, $valid_modes, true ) ) {
         $mode = 'ai_only';
     }
 
-    update_option('chatbot_chat_mode', $mode);
+    update_option( 'chatbot_chat_mode', $mode );
 
     // Sync ai_chat_enabled for backwards compatibility
-    update_option('ai_chat_enabled', $mode === 'both' ? '1' : '0');
+    update_option( 'ai_chat_enabled', $mode === 'both' ? '1' : '0' );
 
-    wp_send_json_success(['mode' => $mode]);
+    wp_send_json_success( [ 'mode' => $mode ] );
 }
 
 // ──── Workflow (Predefined Questions) ────

@@ -1,4 +1,5 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Reusable HTTP helper for the Chatbot Plugin.
  *
@@ -31,45 +32,39 @@
  */
 function chatbot_api_request( $method, $url, $body = null, $headers = [], $timeout = 30 ) {
 
-    $default_headers = [
-        'Content-Type: application/json',
-        'Accept: application/json',
+    $parsed_headers = [
+        'Content-Type' => 'application/json',
+        'Accept'       => 'application/json',
     ];
 
-    $merged_headers = array_unique( array_merge( $default_headers, $headers ) );
+    foreach ( $headers as $header ) {
+        if ( is_string( $header ) && strpos( $header, ':' ) !== false ) {
+            list( $key, $value ) = explode( ':', $header, 2 );
+            $parsed_headers[ trim( $key ) ] = trim( $value );
+        }
+    }
 
-    $curl_opts = [
-        CURLOPT_URL            => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_ENCODING       => '',
-        CURLOPT_MAXREDIRS      => 10,
-        CURLOPT_TIMEOUT        => $timeout,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST  => strtoupper( $method ),
-        CURLOPT_HTTPHEADER     => $merged_headers,
+    $args = [
+        'method'      => strtoupper( $method ),
+        'timeout'     => $timeout,
+        'headers'     => $parsed_headers,
+        'sslverify'   => false,
     ];
 
     if ( $body !== null ) {
-        $curl_opts[ CURLOPT_POSTFIELDS ] = json_encode( $body );
+        $args['body'] = wp_json_encode( $body );
     }
 
     $debug      = function_exists( 'kz_push_api_entry' );
     $start_time = $debug ? microtime( true ) : 0;
 
-    $curl = curl_init();
-    curl_setopt_array( $curl, $curl_opts );
-
-    $response  = curl_exec( $curl );
-    $http_code = curl_getinfo( $curl, CURLINFO_HTTP_CODE );
+    $response = wp_remote_request( $url, $args );
 
     $duration_ms = $debug ? round( ( microtime( true ) - $start_time ) * 1000 ) : 0;
 
-    /* ── cURL error path ── */
-    if ( $response === false ) {
-        $error = curl_error( $curl );
-        curl_close( $curl );
+    /* ── error path ── */
+    if ( is_wp_error( $response ) ) {
+        $error = $response->get_error_message();
 
         if ( $debug ) {
             kz_push_api_entry( [
@@ -96,9 +91,9 @@ function chatbot_api_request( $method, $url, $body = null, $headers = [], $timeo
     }
 
     /* ── Success path ── */
-    curl_close( $curl );
-
-    $decoded = json_decode( $response, true );
+    $http_code = wp_remote_retrieve_response_code( $response );
+    $raw       = wp_remote_retrieve_body( $response );
+    $decoded   = json_decode( $raw, true );
 
     if ( $debug ) {
         kz_push_api_entry( [
@@ -117,7 +112,7 @@ function chatbot_api_request( $method, $url, $body = null, $headers = [], $timeo
     return [
         'success'   => true,
         'http_code' => $http_code,
-        'raw'       => $response,
+        'raw'       => $raw,
         'data'      => $decoded,
         'error'     => '',
     ];

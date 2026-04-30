@@ -117,7 +117,7 @@
                         $saved_files = get_option('chatbot_files', []);
                         $files_count = !empty($saved_files) && is_array($saved_files) ? count($saved_files) : 0;
                     ?>
-                    <span id="files-count" class="files-count-badge"><?php echo $files_count; ?></span>
+                    <span id="files-count" class="files-count-badge"><?php echo absint( $files_count ); ?></span>
                 </div>
                 <div class="settings-card-body" style="padding:10px 20px 16px;">
                     <div id="files-list" class="files-list">

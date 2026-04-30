@@ -1,27 +1,29 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 
-$module = sanitize_text_field($_POST['preferred_module']);
-$chatbot_name = isset($_POST['chatbot_name']) ? sanitize_text_field($_POST['chatbot_name']) : null;
+check_ajax_referer( 'chatbot_action', 'nonce' );
+
+$wp_chatbot_module = isset( $_POST['preferred_module'] ) ? sanitize_text_field( wp_unslash( $_POST['preferred_module'] ) ) : '';
+$wp_chatbot_name   = isset( $_POST['chatbot_name'] ) ? sanitize_text_field( wp_unslash( $_POST['chatbot_name'] ) ) : null;
 
 // Update the preferred module option
-update_option('preferred_module', $module);
+update_option( 'preferred_module', $wp_chatbot_module );
 
 // Update the chatbot name option if it is set
-if (isset($chatbot_name)) {
-    update_option('chatbot_name', $chatbot_name);
+if ( isset( $wp_chatbot_name ) ) {
+    update_option( 'chatbot_name', $wp_chatbot_name );
 }
 
 // Prepare the success message
-$messages = [];
+$wp_chatbot_messages = [];
 
-if ($chatbot_name) {
-    $messages[] = 'Chatbot name has been updated to "' . esc_html($chatbot_name) . '".';
+if ( $wp_chatbot_name ) {
+    $wp_chatbot_messages[] = 'Chatbot name has been updated to "' . esc_html( $wp_chatbot_name ) . '".';
 }
 
-$messages[] = 'Your chatbot now uses the "' . esc_html($module) . '" module.';
+$wp_chatbot_messages[] = 'Your chatbot now uses the "' . esc_html( $wp_chatbot_module ) . '" module.';
 
 // Display the success messages
-echo '<div class="notice notice-success is-dismissible"><p>' . implode('<br>', $messages) . '</p></div>';
+echo '<div class="notice notice-success is-dismissible"><p>' . esc_html( implode( ' ', $wp_chatbot_messages ) ) . '</p></div>';
 
 wp_die();
-?>

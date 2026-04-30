@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit;
 function chatbot_enqueue_scripts($hook)
 {
     // Utility functions (like chat_clog)

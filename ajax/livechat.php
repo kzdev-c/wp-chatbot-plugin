@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit;
 function chatbot_livechat_send()
 {
     include plugin_dir_path(__FILE__) . '../functions/chatbot-livechat-send.php';

@@ -1,5 +1,5 @@
 <?php
-
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Chatbot Appearance Settings – AJAX Handlers
  * Uses the existing WP options system (get_option / update_option).
@@ -96,7 +96,7 @@ function chatbot_appearance_save() {
 
     foreach ($color_fields as $field) {
         if (isset($_POST[$field])) {
-            $val = sanitize_text_field($_POST[$field]);
+            $val = sanitize_text_field( wp_unslash( $_POST[$field] ) );
             if (chatbot_validate_hex_color($val)) {
                 $settings[$field] = $val;
             } else {
@@ -107,12 +107,12 @@ function chatbot_appearance_save() {
 
     // Font family
     if (isset($_POST['font_family'])) {
-        $settings['font_family'] = chatbot_sanitize_font_family($_POST['font_family']);
+        $settings['font_family'] = chatbot_sanitize_font_family( wp_unslash( $_POST['font_family'] ) );
     }
 
     // Color mode
     if (isset($_POST['color_mode'])) {
-        $mode = sanitize_text_field($_POST['color_mode']);
+        $mode = sanitize_text_field( wp_unslash( $_POST['color_mode'] ) );
         $settings['color_mode'] = in_array($mode, ['solid', 'gradient'], true) ? $mode : 'solid';
     }
 
@@ -120,7 +120,7 @@ function chatbot_appearance_save() {
     $font_size_fields = ['header_font_size', 'bot_font_size', 'user_font_size', 'input_font_size'];
     foreach ($font_size_fields as $fsf) {
         if (isset($_POST[$fsf])) {
-            $size = intval($_POST[$fsf]);
+            $size = intval( wp_unslash( $_POST[$fsf] ) );
             if (chatbot_validate_font_size($size)) {
                 $settings[$fsf] = (string) $size;
             } else {
@@ -133,7 +133,7 @@ function chatbot_appearance_save() {
     $font_weight_fields = ['header_font_weight', 'bot_font_weight', 'user_font_weight', 'input_font_weight'];
     foreach ($font_weight_fields as $fwf) {
         if (isset($_POST[$fwf])) {
-            $weight = sanitize_text_field($_POST[$fwf]);
+            $weight = sanitize_text_field( wp_unslash( $_POST[$fwf] ) );
             if (chatbot_validate_font_weight($weight)) {
                 $settings[$fwf] = $weight;
             } else {
@@ -144,7 +144,7 @@ function chatbot_appearance_save() {
 
     // Letter spacing
     if (isset($_POST['letter_spacing'])) {
-        $spacing = floatval($_POST['letter_spacing']);
+        $spacing = floatval( wp_unslash( $_POST['letter_spacing'] ) );
         if (chatbot_validate_letter_spacing($spacing)) {
             $settings['letter_spacing'] = (string) $spacing;
         } else {
@@ -154,7 +154,7 @@ function chatbot_appearance_save() {
 
     // Bot display name
     if (isset($_POST['bot_display_name'])) {
-        $name = sanitize_text_field($_POST['bot_display_name']);
+        $name = sanitize_text_field( wp_unslash( $_POST['bot_display_name'] ) );
         if (chatbot_validate_bot_name($name)) {
             $settings['bot_display_name'] = $name;
             // Also update the main chatbot_name option so existing system stays in sync
@@ -166,7 +166,7 @@ function chatbot_appearance_save() {
 
     // Avatar URL (set by media uploader or explicit clear)
     if (isset($_POST['bot_avatar_url'])) {
-        $url = esc_url_raw($_POST['bot_avatar_url']);
+        $url = esc_url_raw( wp_unslash( $_POST['bot_avatar_url'] ) );
         $settings['bot_avatar_url'] = $url;
     }
 
@@ -210,8 +210,9 @@ function chatbot_appearance_import() {
         wp_send_json_error('Unauthorized', 403);
     }
 
-    $raw = isset($_POST['import_data']) ? wp_unslash($_POST['import_data']) : '';
-    $data = json_decode($raw, true);
+    $raw = isset($_POST['import_data']) ? wp_unslash( $_POST['import_data'] ) : '';
+    // Sanitize after JSON decode since this is structured data
+    $data = json_decode( sanitize_textarea_field( $raw ), true );
 
     if (!is_array($data)) {
         wp_send_json_error('Invalid JSON data.');

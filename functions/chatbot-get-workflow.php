@@ -1,49 +1,50 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Fetches the workflow for the chatbot from the dashboard API.
  * Called via AJAX action 'chatbot_get_workflow'.
  */
 
-$token = get_option('chatbot_token');
+$wp_chatbot_token = get_option( 'chatbot_token' );
 
-if (empty($token)) {
-    echo json_encode(['error' => 'No chatbot token configured.']);
+if ( empty( $wp_chatbot_token ) ) {
+    echo wp_json_encode( [ 'error' => 'No chatbot token configured.' ] );
     wp_die();
 }
 
-$base_url = defined('CHATBOT_DASHBOARD_API_BASE_URL') ? CHATBOT_DASHBOARD_API_BASE_URL : 'https://chatbot-dashboard.local';
-$api_url  = rtrim($base_url, '/') . '/api/livechat/workflow';
+$wp_chatbot_base_url = defined( 'CHATBOT_DASHBOARD_API_BASE_URL' ) ? CHATBOT_DASHBOARD_API_BASE_URL : 'https://chatbot-dashboard.local';
+$wp_chatbot_api_url  = rtrim( $wp_chatbot_base_url, '/' ) . '/api/livechat/workflow';
 
-$result = chatbot_api_request('POST', $api_url, [
-    'token' => $token,
-]);
+$wp_chatbot_result = chatbot_api_request( 'POST', $wp_chatbot_api_url, [
+    'token' => $wp_chatbot_token,
+] );
 
-if (!$result['success']) {
-    echo json_encode(['error' => 'Failed to fetch workflow: ' . $result['error']]);
+if ( ! $wp_chatbot_result['success'] ) {
+    echo wp_json_encode( [ 'error' => 'Failed to fetch workflow: ' . $wp_chatbot_result['error'] ] );
     wp_die();
 }
 
-$http_code = $result['http_code'];
-$data      = $result['data'];
+$wp_chatbot_http_code = $wp_chatbot_result['http_code'];
+$wp_chatbot_data      = $wp_chatbot_result['data'];
 
 // Handle different response scenarios
-if ($http_code === 401) {
-    echo json_encode(['error' => 'Invalid token']);
+if ( 401 === $wp_chatbot_http_code ) {
+    echo wp_json_encode( [ 'error' => 'Invalid token' ] );
     wp_die();
 }
 
-if ($http_code === 404) {
-    echo json_encode(['error' => 'No active workflow found']);
+if ( 404 === $wp_chatbot_http_code ) {
+    echo wp_json_encode( [ 'error' => 'No active workflow found' ] );
     wp_die();
 }
 
-if ($http_code === 200 && isset($data['success']) && $data['success'] === true && isset($data['workflow'])) {
-    echo json_encode([
+if ( 200 === $wp_chatbot_http_code && isset( $wp_chatbot_data['success'] ) && true === $wp_chatbot_data['success'] && isset( $wp_chatbot_data['workflow'] ) ) {
+    echo wp_json_encode( [
         'success'  => true,
-        'workflow' => $data['workflow'],
-    ]);
+        'workflow' => $wp_chatbot_data['workflow'],
+    ] );
 } else {
-    echo json_encode(['error' => 'Unexpected workflow response.']);
+    echo wp_json_encode( [ 'error' => 'Unexpected workflow response.' ] );
 }
 
 wp_die();

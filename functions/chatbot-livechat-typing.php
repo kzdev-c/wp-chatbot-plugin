@@ -1,38 +1,41 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Handles sending a typing indicator via the Live Chat API.
  * Called via AJAX action 'livechat_typing'.
  */
 
-$session_id  = sanitize_text_field($_POST['session_id']);
+check_ajax_referer( 'chatbot_action', 'nonce' );
 
-$token    = get_option('chatbot_token');
-$base_url = CHATBOT_DASHBOARD_API_BASE_URL . '/api/livechat';
+$wp_chatbot_session_id = isset( $_POST['session_id'] ) ? sanitize_text_field( wp_unslash( $_POST['session_id'] ) ) : '';
 
-if (empty($token)) {
-    echo json_encode(['error' => 'Live chat is not configured.']);
+$wp_chatbot_token    = get_option( 'chatbot_token' );
+$wp_chatbot_base_url = CHATBOT_DASHBOARD_API_BASE_URL . '/api/livechat';
+
+if ( empty( $wp_chatbot_token ) ) {
+    echo wp_json_encode( [ 'error' => 'Live chat is not configured.' ] );
     wp_die();
 }
 
-if (empty($session_id)) {
-    echo json_encode(['error' => 'Session ID is required.']);
+if ( empty( $wp_chatbot_session_id ) ) {
+    echo wp_json_encode( [ 'error' => 'Session ID is required.' ] );
     wp_die();
 }
 
-$api_url = rtrim($base_url, '/') . '/typing';
+$wp_chatbot_api_url = rtrim( $wp_chatbot_base_url, '/' ) . '/typing';
 
-$post_data = [
-    'token'       => $token,
-    'session_id'  => $session_id,
+$wp_chatbot_post_data = [
+    'token'       => $wp_chatbot_token,
+    'session_id'  => $wp_chatbot_session_id,
     'sender_type' => 'visitor',
 ];
 
-$result = chatbot_api_request('POST', $api_url, $post_data, [], 10);
+$wp_chatbot_result = chatbot_api_request( 'POST', $wp_chatbot_api_url, $wp_chatbot_post_data, [], 10 );
 
-if (!$result['success']) {
-    echo json_encode(['error' => $result['error']]);
+if ( ! $wp_chatbot_result['success'] ) {
+    echo wp_json_encode( [ 'error' => $wp_chatbot_result['error'] ] );
 } else {
-    echo json_encode(['success' => true, 'data' => $result['data']]);
+    echo wp_json_encode( [ 'success' => true, 'data' => $wp_chatbot_result['data'] ] );
 }
 
 wp_die();
