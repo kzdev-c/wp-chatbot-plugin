@@ -5,7 +5,7 @@ require_once plugin_dir_path( __FILE__ ) . '../functions/chatbot-appearance-sett
 $wp_chatbot_appearance_defaults = chatbot_appearance_defaults();
 $wp_chatbot_appearance          = get_option( 'chatbot_appearance', $wp_chatbot_appearance_defaults );
 $wp_chatbot_appearance          = wp_parse_args( $wp_chatbot_appearance, $wp_chatbot_appearance_defaults );
-$wp_chatbot_bot_avatar          = ! empty( $wp_chatbot_appearance['bot_avatar_url'] ) ? $wp_chatbot_appearance['bot_avatar_url'] : plugin_dir_url( __FILE__ ) . 'icon.png';
+$wp_chatbot_bot_avatar          = ! empty( $wp_chatbot_appearance['bot_avatar_url'] ) ? $wp_chatbot_appearance['bot_avatar_url'] : plugin_dir_url( __FILE__ ) . 'icon-large.png';
 $wp_chatbot_bot_name            = ! empty( $wp_chatbot_appearance['bot_display_name'] ) ? $wp_chatbot_appearance['bot_display_name'] : ( get_option( 'chatbot_name' ) ?: 'Chat Assistant' );
 ?>
 <div id="codeness-chatbot" class="collapsed">

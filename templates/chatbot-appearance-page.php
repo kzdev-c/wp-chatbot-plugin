@@ -54,7 +54,7 @@ if (!defined('ABSPATH')) exit;
                         <label>Bot Avatar / Icon</label>
                         <div class="appearance-avatar-row">
                             <div class="appearance-avatar-preview" id="appearance-avatar-preview">
-                                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon.png'); ?>" alt="Bot Avatar" id="appearance-avatar-img" />
+                                <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon-large.png'); ?>" alt="Bot Avatar" id="appearance-avatar-img" />
                             </div>
                             <div class="appearance-avatar-actions">
                                 <button type="button" class="appearance-btn appearance-btn-sm" id="appearance-avatar-upload">
@@ -267,7 +267,7 @@ if (!defined('ABSPATH')) exit;
                     <div class="appearance-preview-chatbot" id="preview-chatbot">
                         <!-- Preview Header -->
                         <div class="preview-header" id="preview-header">
-                            <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon.png'); ?>" alt="Bot" id="preview-avatar-img" class="preview-header-avatar" />
+                            <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon-large.png'); ?>" alt="Bot" id="preview-avatar-img" class="preview-header-avatar" />
                             <div class="preview-header-info">
                                 <span class="preview-header-name" id="preview-bot-name"><?php echo esc_html(get_option('chatbot_name') ?: 'Chat Assistant'); ?></span>
                                 <span class="preview-header-status">Online • Ready to help</span>
@@ -301,7 +301,7 @@ if (!defined('ABSPATH')) exit;
                     </div>
                     <!-- Preview Toggle Button -->
                     <div class="preview-toggle-btn" id="preview-toggle-btn">
-                        <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon.png'); ?>" alt="Toggle" id="preview-toggle-avatar" />
+                        <img src="<?php echo esc_url(plugin_dir_url(__FILE__) . 'icon-large.png'); ?>" alt="Toggle" id="preview-toggle-avatar" />
                     </div>
                 </div>
             </div>

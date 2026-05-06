@@ -93,7 +93,7 @@ function chatbot_enqueue_scripts($hook)
 
         wp_localize_script('chatbot-appearance-js', 'chatbotAppearanceData', [
             'ajaxurl'          => admin_url('admin-ajax.php'),
-            'defaultAvatarUrl' => plugin_dir_url(__FILE__) . '../templates/icon.png',
+            'defaultAvatarUrl' => plugin_dir_url(__FILE__) . '../templates/icon-large.png',
         ]);
     }
 
