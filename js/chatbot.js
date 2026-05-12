@@ -3,14 +3,14 @@
  * Refactored into ES6 modules for better maintainability.
  */
 
-import { chat_clog, formatChatMessage, playNotificationSound } from './modules/utils.js';
-import { getSessionId, initUserTracking, getCookie, setCookie } from './modules/storage.js';
-import { scrollToBottom, updateCounter as uiUpdateCounter, showChatbot, hideChatbot, appendSystemMessage } from './modules/ui.js';
-import { startWebSocket, stopWebSocket, showAgentTyping, hideAgentTyping } from './modules/livechat.js';
-import { getWorkflowNode, renderWorkflowNode } from './modules/workflow.js';
-import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat, getLiveChatMessages } from './modules/api.js';
-import { initSpeechRecognition } from './modules/voice.js';
-import { renderRatingUI, fillStars, setLabel, getLabel } from './modules/rating.js';
+import { chat_clog, formatChatMessage, playNotificationSound } from './modules/utils.js?ver=2.0';
+import { getSessionId, initUserTracking, getCookie, setCookie, resetInactivityTimer, startInactivityTimer, processPendingInactivity, deleteChatHistory } from './modules/storage.js?ver=2.0';
+import { scrollToBottom, updateCounter as uiUpdateCounter, showChatbot, hideChatbot, appendSystemMessage } from './modules/ui.js?ver=2.0';
+import { startWebSocket, stopWebSocket, showAgentTyping, hideAgentTyping } from './modules/livechat.js?ver=2.0';
+import { getWorkflowNode, renderWorkflowNode } from './modules/workflow.js?ver=2.0';
+import { apiRequest, askQuestion, getWorkflow, sendLiveChatMessage as apiSendLiveMsg, closeLiveChat as apiCloseLiveChat, rateChat, sendAIHistoryToLiveChat, getLiveChatMessages } from './modules/api.js?ver=2.0';
+import { initSpeechRecognition } from './modules/voice.js?ver=2.0';
+import { renderRatingUI, fillStars, setLabel, getLabel } from './modules/rating.js?ver=2.0';
 
 jQuery(document).ready(function ($) {
     // --- Elements ---
@@ -240,6 +240,9 @@ jQuery(document).ready(function ($) {
         const originalQuestion = inputField.val();
         if (!originalQuestion.trim()) return;
 
+        // Reset inactivity timer whenever user sends a message
+        resetInactivityTimer(getSessionId());
+
         inputField.val('').css('height', '40px');
 
         if (isLiveChatMode) {
@@ -380,6 +383,7 @@ jQuery(document).ready(function ($) {
     };
 
     // --- Init ---
+    processPendingInactivity(); // Check for inactive sessions from previous loads
     updateCounter();
     const sid = getSessionId();
     const savedHtml = localStorage.getItem('cb_history_' + sid);
@@ -435,6 +439,9 @@ jQuery(document).ready(function ($) {
     recognition = initSpeechRecognition($('#codeness-chatbot-mic'), inputField, $('#language-select'), {
         onEnd: () => { }
     });
+
+    // Start inactivity timer - clears history if user inactive for 10 minutes
+    startInactivityTimer(sid);
 
     // --- Event Handlers ---
     toggleButton.on('click', () => {
@@ -552,15 +559,16 @@ jQuery(document).ready(function ($) {
     $('#close-chat-cancel').on('click', () => closeChatDialog.removeClass('show'));
     $('#close-chat-confirm').on('click', () => {
         closeChatDialog.removeClass('show');
+        const s = getSessionId();
+        
         if (liveChatId && isLiveChatMode) {
             apiCloseLiveChat(liveChatId).done(() => {
                 appendSystemMessage(messagesContainer, 'Chat closed.', formatChatMessage, scrollToBottom);
-                const closedId = liveChatId; exitLiveChatMode(); renderRatingUI(messagesContainer, closedId);
+                const closedId = liveChatId; 
+                exitLiveChatMode();
+                renderRatingUI(messagesContainer, closedId);
             });
         } else {
-            const s = getSessionId();
-            localStorage.removeItem('cb_history_' + s);
-            localStorage.removeItem('cb_livechat_' + s);
             sessionStorage.removeItem('chatbot_livechat_session_id');
             document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             clearWorkflowState();
@@ -568,6 +576,13 @@ jQuery(document).ready(function ($) {
             messagesContainer.empty();
             appendSystemMessage(messagesContainer, "New conversation started.", formatChatMessage, scrollToBottom);
             observer.observe(messagesContainer[0], { childList: true, subtree: true, characterData: true });
+            
+            // Clear chat history immediately
+            localStorage.removeItem('cb_history_' + s);
+            localStorage.removeItem('cb_livechat_' + s);
+            // Inactivity timer will clear remaining history if user stays inactive
+            startInactivityTimer(s);
+            
             saveChatHistory();
             initWorkflow();
         }
@@ -608,10 +623,14 @@ jQuery(document).ready(function ($) {
             scrollToBottom(messagesContainer);
             setTimeout(() => {
                 const s = getSessionId();
-                localStorage.removeItem('cb_history_' + s);
-                localStorage.removeItem('cb_livechat_' + s);
                 sessionStorage.removeItem('chatbot_livechat_session_id');
                 document.cookie = "cb_user_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                
+                // Clear history immediately and restart inactivity timer
+                localStorage.removeItem('cb_history_' + s);
+                localStorage.removeItem('cb_livechat_' + s);
+                startInactivityTimer(s);
+                
                 window.location.reload();
             }, 1500);
         });
